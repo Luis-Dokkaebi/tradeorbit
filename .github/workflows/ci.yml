@@ -1,0 +1,40 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Computational sensors (SDD § Harness de ejecución)
+      - run: npm run check
+      - run: npm run test:coverage
+      - run: npm run build
+      - name: Constitution is only changed by a person
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
+          if git diff --name-only --diff-filter=MDRT "origin/${{ github.base_ref }}"...HEAD | grep -qx 'specs/constitution.md'; then
+            echo "::error::specs/constitution.md changed: requires explicit human review (CODEOWNERS)"; exit 1
+          fi
+      - name: Database RLS sensor
+        run: |
+          sudo apt-get install -y --no-install-recommends postgresql-16 >/dev/null
+          npm run db:test
+      - name: Browser walk-through
+        run: |
+          npx playwright install --with-deps chromium
+          npm run e2e

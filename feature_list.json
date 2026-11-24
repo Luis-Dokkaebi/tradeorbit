@@ -1,0 +1,357 @@
+{
+  "$comment": "Un registro por criterio de aceptación (SDD § Harness de ejecución). El agente solo puede cambiar 'passes', y solo después de que su verificación esté en verde. Cambiar cualquier otro campo exige ALLOW_FEATURE_LIST_EDIT=1 (persona).",
+  "features": [
+    {
+      "id": "US-01.a",
+      "story": "US-01",
+      "priority": "P1",
+      "criterion": "Subir la orden de compra o llenar el formulario crea el expediente con proveedor, mercancía, cantidad, importe y moneda.",
+      "verification": "src/server/server.test.ts › US-01; e2e/demo-script.spec.ts",
+      "passes": true
+    },
+    {
+      "id": "US-01.b",
+      "story": "US-01",
+      "priority": "P1",
+      "criterion": "Los campos con confianza menor a 0.80 (umbral configurable) quedan marcados para revisión.",
+      "verification": "src/domain/extraction.test.ts; src/server/server.test.ts › US-01",
+      "passes": true
+    },
+    {
+      "id": "US-02.a",
+      "story": "US-02",
+      "priority": "P1",
+      "criterion": "Para factura, lista de empaque, comprobante y transporte extrae los campos del contrato y muestra su origen (página y recuadro).",
+      "verification": "src/domain/extraction.test.ts; e2e/demo-script.spec.ts",
+      "passes": true
+    },
+    {
+      "id": "US-02.b",
+      "story": "US-02",
+      "priority": "P1",
+      "criterion": "Un documento ilegible no bloquea el expediente y pasa a revisión manual.",
+      "verification": "src/server/server.test.ts › US-02",
+      "passes": true
+    },
+    {
+      "id": "US-03.a",
+      "story": "US-03",
+      "priority": "P1",
+      "criterion": "Se detectan las 3 discrepancias plantadas (importe, cantidad, proveedor), cada una con tipo, severidad y tarea de corrección.",
+      "verification": "src/domain/discrepancies.test.ts; e2e/demo-script.spec.ts",
+      "passes": true
+    },
+    {
+      "id": "US-03.b",
+      "story": "US-03",
+      "priority": "P1",
+      "criterion": "Los documentos limpios no generan alertas.",
+      "verification": "src/domain/discrepancies.test.ts",
+      "passes": true
+    },
+    {
+      "id": "US-04.a",
+      "story": "US-04",
+      "priority": "P1",
+      "criterion": "Calcula valor + arancel + DTA + IVA + flete + honorarios (editable) con decimales exactos.",
+      "verification": "src/domain/landedCost.test.ts",
+      "passes": true
+    },
+    {
+      "id": "US-04.b",
+      "story": "US-04",
+      "priority": "P1",
+      "criterion": "Muestra fracción propuesta, tasa con fuente y vigencia, y NOM aplicables.",
+      "verification": "e2e/demo-script.spec.ts",
+      "passes": true
+    },
+    {
+      "id": "US-04.c",
+      "story": "US-04",
+      "priority": "P1",
+      "criterion": "Si la fracción no está en la tabla responde \"sin dato\" y pide revisión.",
+      "verification": "src/server/server.test.ts › US-04; e2e/demo-script.spec.ts",
+      "passes": true
+    },
+    {
+      "id": "US-05.a",
+      "story": "US-05",
+      "priority": "P1",
+      "criterion": "Con 100,000 MXN a 18.25 el bruto es 5,479.45 USD.",
+      "verification": "src/domain/paymentRoutes.test.ts",
+      "passes": true
+    },
+    {
+      "id": "US-05.b",
+      "story": "US-05",
+      "priority": "P1",
+      "criterion": "Muestra al menos 2 rutas (banco y riel con stablecoin intermedio) con costo desglosado, tiempo y etiqueta DEMO.",
+      "verification": "src/domain/paymentRoutes.test.ts; e2e/demo-script.spec.ts",
+      "passes": true
+    },
+    {
+      "id": "US-05.c",
+      "story": "US-05",
+      "priority": "P1",
+      "criterion": "El botón dice \"Enviar a aprobación\", nunca \"Pagar\".",
+      "verification": "e2e/demo-script.spec.ts",
+      "passes": true
+    },
+    {
+      "id": "US-06.a",
+      "story": "US-06",
+      "priority": "P1",
+      "criterion": "Cada propuesta muestra su evidencia y registra aprobador, fecha y versión.",
+      "verification": "src/server/server.test.ts › US-05 / US-06; e2e/demo-script.spec.ts",
+      "passes": true
+    },
+    {
+      "id": "US-06.b",
+      "story": "US-06",
+      "priority": "P1",
+      "criterion": "Un rechazo exige motivo.",
+      "verification": "src/server/server.test.ts › US-05 / US-06; e2e/demo-script.spec.ts",
+      "passes": true
+    },
+    {
+      "id": "US-06.c",
+      "story": "US-06",
+      "priority": "P1",
+      "criterion": "Al aprobar el estado es \"autorizada (simulada)\" y no se mueve dinero.",
+      "verification": "src/server/server.test.ts › US-05 / US-06; e2e/demo-script.spec.ts",
+      "passes": true
+    },
+    {
+      "id": "US-07.a",
+      "story": "US-07",
+      "priority": "P2",
+      "criterion": "Línea de tiempo: orden confirmada, embarque, tránsito, arribo, liberación aduanal y entrega, cargada del escenario demo o a mano.",
+      "verification": "src/domain/logistics.test.ts; src/server/server.test.ts › US-07",
+      "passes": true
+    },
+    {
+      "id": "US-07.b",
+      "story": "US-07",
+      "priority": "P2",
+      "criterion": "Si la fecha estimada se vence, el expediente pasa a \"retraso\".",
+      "verification": "src/server/server.test.ts › US-07; e2e/scenarios.spec.ts",
+      "passes": true
+    },
+    {
+      "id": "US-08.a",
+      "story": "US-08",
+      "priority": "P2",
+      "criterion": "Genera la lista de documentos pendientes según el tipo de mercancía y exporta el expediente en un archivo.",
+      "verification": "src/server/server.test.ts › US-08; e2e/scenarios.spec.ts",
+      "passes": true
+    },
+    {
+      "id": "US-08.b",
+      "story": "US-08",
+      "priority": "P2",
+      "criterion": "Declara que el pedimento lo presenta el agente aduanal y pide confirmar la inscripción en el Padrón de Importadores.",
+      "verification": "src/server/server.test.ts › US-08",
+      "passes": true
+    },
+    {
+      "id": "US-09.a",
+      "story": "US-09",
+      "priority": "P1",
+      "criterion": "Cruza orden, factura, pago y recepción; muestra saldo por pagar y estado (conciliado, con diferencia o pendiente).",
+      "verification": "src/domain/reconciliation.test.ts",
+      "passes": true
+    },
+    {
+      "id": "US-09.b",
+      "story": "US-09",
+      "priority": "P1",
+      "criterion": "En el caso semilla el saldo coincide con el calculado a mano.",
+      "verification": "src/domain/reconciliation.test.ts; src/server/server.test.ts › US-07 / US-09",
+      "passes": true
+    },
+    {
+      "id": "US-10.a",
+      "story": "US-10",
+      "priority": "P2",
+      "criterion": "Responde \"¿Ya pagué?\", \"¿Cuánto falta?\", \"¿Qué documento falta?\" y \"¿Cuándo llega?\" citando el registro de origen.",
+      "verification": "src/server/server.test.ts › US-10; e2e/demo-script.spec.ts",
+      "passes": true
+    },
+    {
+      "id": "US-10.b",
+      "story": "US-10",
+      "priority": "P2",
+      "criterion": "Fuera del expediente responde \"sin dato\".",
+      "verification": "src/server/server.test.ts › US-10",
+      "passes": true
+    },
+    {
+      "id": "US-11.a",
+      "story": "US-11",
+      "priority": "P2",
+      "criterion": "Panel de lectura con agentes, permisos y bitácora.",
+      "verification": "e2e/demo-script.spec.ts",
+      "passes": true
+    },
+    {
+      "id": "US-11.b",
+      "story": "US-11",
+      "priority": "P2",
+      "criterion": "Una política evolucionada aparece como \"sandbox, sin despliegue\" y no existe ningún camino de despliegue automático.",
+      "verification": "src/server/server.test.ts › US-11",
+      "passes": true
+    },
+    {
+      "id": "US-11.c",
+      "story": "US-11",
+      "priority": "P2",
+      "criterion": "Interruptor de pausa global detiene a todos los agentes sin borrar estado y queda en la bitácora.",
+      "verification": "src/server/server.test.ts › US-11",
+      "passes": true
+    },
+    {
+      "id": "US-12.a",
+      "story": "US-12",
+      "priority": "P1",
+      "criterion": "Selector de 3 escenarios (limpio, con discrepancia y con retraso).",
+      "verification": "src/server/server.test.ts › US-12; e2e/scenarios.spec.ts",
+      "passes": true
+    },
+    {
+      "id": "US-12.b",
+      "story": "US-12",
+      "priority": "P1",
+      "criterion": "Reinicio al estado semilla en un clic.",
+      "verification": "src/server/server.test.ts › US-12; e2e/scenarios.spec.ts",
+      "passes": true
+    },
+    {
+      "id": "US-12.c",
+      "story": "US-12",
+      "priority": "P1",
+      "criterion": "Etiqueta DEMO global visible en todas las pantallas.",
+      "verification": "e2e/identity.spec.ts",
+      "passes": true
+    },
+    {
+      "id": "US-12.d",
+      "story": "US-12",
+      "priority": "P1",
+      "criterion": "Modo reproducción declarado en pantalla; nunca se hace pasar por ejecución en vivo.",
+      "verification": "src/server/server.test.ts › US-12; e2e/scenarios.spec.ts",
+      "passes": true
+    },
+    {
+      "id": "NFR-01",
+      "story": "NFR",
+      "priority": "NFR",
+      "criterion": "Extracción de un documento de una página en 20 s o menos (p95).",
+      "verification": "src/domain/extraction.test.ts",
+      "passes": true
+    },
+    {
+      "id": "NFR-02",
+      "story": "NFR",
+      "priority": "NFR",
+      "criterion": "95% o más de los campos del set semilla correctos.",
+      "verification": "src/domain/extraction.test.ts",
+      "passes": true
+    },
+    {
+      "id": "NFR-03",
+      "story": "NFR",
+      "priority": "NFR",
+      "criterion": "Error de redondeo ≤ 0.01 USD; decimales exactos, no flotantes.",
+      "verification": "src/domain/*.test.ts (decimal.js)",
+      "passes": true
+    },
+    {
+      "id": "NFR-04",
+      "story": "NFR",
+      "priority": "NFR",
+      "criterion": "Pantalla inicial en menos de 3 s y plan B funcional sin red.",
+      "verification": "e2e/performance.spec.ts",
+      "passes": true
+    },
+    {
+      "id": "NFR-05",
+      "story": "NFR",
+      "priority": "NFR",
+      "criterion": "Sin llaves en el cliente, acceso por organización y archivos en almacenamiento privado.",
+      "verification": "harness/scripts/check-secrets.mjs; src/server/server.test.ts › NFR-05; supabase/tests/rls.sql",
+      "passes": false
+    },
+    {
+      "id": "NFR-06",
+      "story": "NFR",
+      "priority": "NFR",
+      "criterion": "100% de las acciones en una bitácora que no se puede editar ni borrar.",
+      "verification": "src/server/server.test.ts › NFR-06; supabase/tests/rls.sql",
+      "passes": true
+    },
+    {
+      "id": "NFR-07",
+      "story": "NFR",
+      "priority": "NFR",
+      "criterion": "Español por defecto, con inglés y chino listos en archivos de traducción.",
+      "verification": "src/i18n/i18n.test.ts",
+      "passes": true
+    },
+    {
+      "id": "NFR-08",
+      "story": "NFR",
+      "priority": "NFR",
+      "criterion": "Cero datos reales de clientes; documentos semilla sintéticos.",
+      "verification": "src/server/seed/seed.test.ts (revisión humana antes de cada demo)",
+      "passes": true
+    },
+    {
+      "id": "D-01",
+      "story": "Diseño",
+      "priority": "Diseño",
+      "criterion": "Dirección visual y referencias en design/direction.md aprobadas por una persona.",
+      "verification": "Revisión humana",
+      "passes": false
+    },
+    {
+      "id": "D-02",
+      "story": "Diseño",
+      "priority": "Diseño",
+      "criterion": "La interfaz no usa ningún valor de estilo fuera de los tokens.",
+      "verification": "harness/scripts/check-tokens.mjs",
+      "passes": true
+    },
+    {
+      "id": "D-03",
+      "story": "Diseño",
+      "priority": "Diseño",
+      "criterion": "Revisión con capturas de cada pantalla de la demo: todas pasan la prueba de identidad.",
+      "verification": "e2e/identity.spec.ts + revisión humana de capturas",
+      "passes": false
+    },
+    {
+      "id": "D-04",
+      "story": "Diseño",
+      "priority": "Diseño",
+      "criterion": "Skill Hallmark confirmada y activa en el repositorio.",
+      "verification": ".claude/skills/hallmark/SKILL.md",
+      "passes": true
+    },
+    {
+      "id": "T-041",
+      "story": "Entrega",
+      "priority": "Entrega",
+      "criterion": "Revisión de secretos y de datos sintéticos.",
+      "verification": "harness/scripts/check-secrets.mjs; src/server/seed/seed.test.ts",
+      "passes": true
+    },
+    {
+      "id": "T-042",
+      "story": "Entrega",
+      "priority": "Entrega",
+      "criterion": "Corregir en la página original (Lovable) la diferencia de 1.10 USD, el \"+3.8%\" sin medición y el enlace roto a aduanas.",
+      "verification": "Fuera de este repositorio: requiere acceso a Lovable",
+      "passes": false
+    }
+  ]
+}

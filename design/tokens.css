@@ -1,0 +1,68 @@
+/* Hallmark · macrostructure: Workbench · genre: modern-minimal (utilitario) · theme: custom "Expediente"
+ * axes: paper-band light (manila, L 97%) · display grotesk-expanded (Archivo wdth 118) · accent warm vermilion (decision only)
+ * pre-emit critique: P5 H4 E4 S5 R5 V4
+ * Single source of truth (D-02). The UI must not use any colour, font or spacing outside these tokens.
+ */
+:root {
+  /* Paper & ink */
+  --color-paper: oklch(97.4% 0.008 85);
+  --color-paper-2: oklch(99% 0.004 85);
+  --color-paper-3: oklch(94.2% 0.012 85);
+  --color-ink: oklch(24% 0.03 258);
+  --color-ink-2: oklch(42% 0.022 258);
+  --color-ink-3: oklch(49% 0.016 258);
+  --color-rule: oklch(86.5% 0.012 85);
+  --color-rule-strong: oklch(74% 0.014 85);
+  --color-on-ink: oklch(97.4% 0.008 85);
+  /* Form control borders: ≥3:1 against paper (WCAG 1.4.11). */
+  --color-control-border: oklch(60% 0.014 85);
+
+  /* Meaning-bearing colours */
+  --color-decision: oklch(50% 0.18 32);
+  --color-decision-soft: oklch(94% 0.035 32);
+  --color-sim: oklch(45% 0.15 268);
+  --color-sim-soft: oklch(94.5% 0.025 268);
+  --color-ok: oklch(46% 0.1 155);
+  --color-ok-soft: oklch(94.5% 0.03 155);
+  --color-wait: oklch(50% 0.12 70);
+  --color-wait-soft: oklch(95% 0.04 80);
+  --color-focus: oklch(45% 0.15 268);
+
+  /* Simulated hatch (SVG pattern, not a gradient) */
+  --pattern-sim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M-2 2l4-4M0 8l8-8M6 10l4-4' stroke='%233d4fb8' stroke-opacity='.16' stroke-width='1.2'/%3E%3C/svg%3E");
+
+  /* Typography */
+  --font-display: 'Archivo Variable', 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Archivo Variable', 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
+  --stretch-display: 118%;
+  --stretch-body: 100%;
+  --weight-display: 640;
+  --weight-body: 420;
+  --weight-strong: 580;
+
+  --text-xs: 0.72rem;
+  --text-sm: 0.84rem;
+  --text-base: 0.95rem;
+  --text-lg: 1.12rem;
+  --text-xl: 1.4rem;
+  --text-2xl: clamp(1.55rem, 1.2rem + 1.4vw, 2.2rem);
+  --text-display: clamp(1.9rem, 1.3rem + 2.6vw, 3.1rem);
+  --tracking-label: 0.06em;
+  --tracking-display: -0.018em;
+
+  /* Space (4-pt) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+
+  --radius: 3px;
+  --rule-width: 1px;
+  --shell-max: 1320px;
+  --stamp-duration: 160ms;
+}

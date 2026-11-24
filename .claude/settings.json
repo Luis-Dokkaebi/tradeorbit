@@ -2,6 +2,18 @@
   "hooks": {
     "PreToolUse": [
       {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/harness/hooks/guard-protected-files.mjs\"",
+            "timeout": 10
+          }
+        ],
+        "id": "pre:edit-write:kiilonova-guard",
+        "description": "Kiilonova harness: block constitution edits; feature_list.json only 'passes' may change"
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           {
