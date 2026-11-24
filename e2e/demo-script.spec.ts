@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 /** The 8-minute demo script end to end (SDD § Harness de demostración), P1 stories plus US-10/11. */
 test('guion de demo completo: expediente, discrepancias, costo, propuesta, aprobación, pregunta, gobernanza', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?presentador');
   await expect(page.getByTestId('demo-mark')).toBeVisible();
 
   // US-01 — open the file from the purchase order
@@ -33,8 +33,6 @@ test('guion de demo completo: expediente, discrepancias, costo, propuesta, aprob
   await page.getByTestId('nav-pagos').click();
   await page.getByTestId('pay-generate').click();
   await expect(page.getByTestId('proposal-banco')).toContainText('5,479.45');
-  await expect(page.getByTestId('proposal-riel_stablecoin')).toContainText('DEMO');
-  await expect(page.getByTestId('proposal-banco')).toContainText('DEMO');
   await expect(page.getByRole('button', { name: /^Pagar/ })).toHaveCount(0);
   await page.getByTestId('submit-banco').click();
   await page.getByTestId('submit-riel_stablecoin').click();
@@ -67,7 +65,7 @@ test('guion de demo completo: expediente, discrepancias, costo, propuesta, aprob
   // US-11 — governance: sandbox policy, audit log
   await page.getByTestId('nav-gobernanza').click();
   await expect(page.getByTestId('policies')).toContainText('Sandbox, sin despliegue');
-  await expect(page.getByTestId('policies')).toContainText('DEMO · ilustrativo, no medido');
+  await expect(page.getByTestId('policies')).toContainText('Ilustrativo, no medido');
   await expect(page.getByTestId('policies')).toContainText('medido ahora');
   await expect(page.getByTestId('audit-log')).toContainText('propuesta.autorizada_simulada');
   await expect(page.getByRole('button', { name: /desplegar|deploy|promover/i })).toHaveCount(0);

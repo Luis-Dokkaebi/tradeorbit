@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('selector de escenarios, reinicio y reproducción (US-12, US-07, US-08)', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/?presentador');
   await page.getByTestId('scenario-retraso').click();
   await expect(page.getByTestId('delay-alert')).toBeVisible();
 

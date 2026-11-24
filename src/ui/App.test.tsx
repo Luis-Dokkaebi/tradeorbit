@@ -19,12 +19,19 @@ const renderApp = (scenario: 'limpio' | 'discrepancia' | 'retraso' = 'discrepanc
 
 describe('App shell', () => {
   beforeEach(() => {
-    window.location.hash = '#/expediente';
+    window.history.replaceState(null, '', '/?presentador#/expediente');
   });
 
-  it('always shows the DEMO band', () => {
+  it('shows presenter controls only with ?presentador', () => {
     renderApp();
-    expect(within(screen.getByTestId('demo-band')).getByTestId('demo-mark')).toHaveTextContent('Entorno de demostración');
+    expect(within(screen.getByTestId('demo-band')).getByTestId('demo-mark')).toHaveTextContent('Modo presentador');
+  });
+
+  it('the public view shows no presenter controls and no DEMO label', () => {
+    window.history.replaceState(null, '', '/#/expediente');
+    renderApp();
+    expect(screen.queryByTestId('demo-band')).toBeNull();
+    expect(document.body.textContent).not.toMatch(/DEMO/);
   });
 
   it('opens the file from the purchase order and flags the low-confidence ETA', async () => {

@@ -47,7 +47,7 @@ export function RouteSlip({ shipment }: { shipment: Shipment }) {
       state: openDisc.length > 0 ? `${openDisc.length} ${t('disc.title').toLowerCase()}` : support.length >= 4 ? t('state.done') : t('state.pending'),
       detail: `${support.length}/4`,
     },
-    { key: 'stage.cost', tone: quote ? 'ok' : 'neutral', state: quote ? t('state.done') : t('state.pending'), detail: quote ? `${quote.totalMxn} MXN · DEMO` : '—' },
+    { key: 'stage.cost', tone: quote ? 'ok' : 'neutral', state: quote ? t('state.done') : t('state.pending'), detail: quote ? `${quote.totalMxn} MXN` : '—' },
     paymentStep(),
     eventStep('stage.shipping', 'embarque'),
     eventStep('stage.customs', 'liberacion'),

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ComponentType } from 're
 import { useT, type MessageKey } from '../i18n';
 import { ErrorBoundary } from './ErrorBoundary';
 import { useServer } from './serverContext';
-import { DemoBand } from './components/DemoBand';
+import { DemoBand, isPresenterMode } from './components/DemoBand';
 import { Masthead } from './components/Masthead';
 import { PresenterNotes } from './components/PresenterNotes';
 import { useHashRoute, type Route } from './useHashRoute';
@@ -36,6 +36,7 @@ export function App() {
   const route = useHashRoute();
   const { server, ctx } = useServer();
   const [notesOpen, setNotesOpen] = useState(false);
+  const [presenter] = useState(isPresenterMode);
   const mainRef = useRef<HTMLElement>(null);
   const firstRender = useRef(true);
   const View = VIEWS[route];
@@ -53,7 +54,7 @@ export function App() {
   return (
     <>
       <button type="button" className="sr-only focus:not-sr-only" onClick={() => mainRef.current?.focus()}>{t('common.skip')}</button>
-      <DemoBand notesOpen={notesOpen} onToggleNotes={() => setNotesOpen((o) => !o)} />
+      {presenter ? <DemoBand notesOpen={notesOpen} onToggleNotes={() => setNotesOpen((o) => !o)} /> : null}
       <Masthead route={route} />
       <main id="main" ref={mainRef} tabIndex={-1} className="mx-auto w-full max-w-shell px-4 py-6 outline-none">
         <ErrorBoundary key={`${route}-${server.getEpoch()}`} onReset={() => server.resetDemo(ctx)}>
@@ -61,7 +62,7 @@ export function App() {
         </ErrorBoundary>
       </main>
       <footer className="mx-auto w-full max-w-shell border-t border-rule px-4 py-4">
-        <p className="mono text-xs text-ink-3">Kiilonova Trade · Entorno de demostración · Datos sintéticos · Ninguna función mueve dinero, firma o presenta ante una autoridad.</p>
+        <p className="mono text-xs text-ink-3">Kiilonova Trade · Los agentes proponen, una persona autoriza. Ninguna función mueve dinero, firma o presenta ante una autoridad.</p>
       </footer>
       {notesOpen ? <PresenterNotes onClose={closeNotes} /> : null}
     </>

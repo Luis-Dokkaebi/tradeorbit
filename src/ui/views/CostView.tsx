@@ -4,7 +4,7 @@ import { formatDateEs } from '../../shared/dates';
 import { dec } from '../../shared/money';
 import type { LandedCostResult } from '../../shared/schemas';
 import { DEMO_FX_RATE } from '../../server/seed/scenarios';
-import { Amount, DemoTag, ErrorNote, Field, PageHead, Sheet, Stamp } from '../components/primitives';
+import { Amount, ErrorNote, Field, PageHead, Sheet, Stamp } from '../components/primitives';
 import { useAction, useServer } from '../serverContext';
 import { useShipment } from '../useShipment';
 import { NeedsFile } from './NeedsFile';
@@ -33,9 +33,9 @@ export function CostView() {
       <PageHead title={t('cost.title')} lede={t('cost.lede')} />
       <form className="sheet sheet-body grid gap-4 sm:grid-cols-2 lg:grid-cols-[repeat(4,minmax(0,1fr))_auto] lg:items-end" onSubmit={submit}>
         <label className="field"><span className="label">{t('cost.hsCode')}</span><input className="input" value={form.hsCode} onChange={(e) => setForm({ ...form, hsCode: e.target.value })} data-testid="hs-input" /></label>
-        <label className="field"><span className="label">{t('cost.freight')} · DEMO</span><input className="input" inputMode="decimal" value={form.freightUsd} onChange={(e) => setForm({ ...form, freightUsd: e.target.value })} /></label>
-        <label className="field"><span className="label">{t('cost.fees')} · DEMO</span><input className="input" inputMode="decimal" value={form.brokerFeesMxn} onChange={(e) => setForm({ ...form, brokerFeesMxn: e.target.value })} /></label>
-        <label className="field"><span className="label">{t('cost.fx')} · DEMO</span><input className="input" inputMode="decimal" value={form.fxRate} onChange={(e) => setForm({ ...form, fxRate: e.target.value })} /></label>
+        <label className="field"><span className="label">{t('cost.freight')}</span><input className="input" inputMode="decimal" value={form.freightUsd} onChange={(e) => setForm({ ...form, freightUsd: e.target.value })} /></label>
+        <label className="field"><span className="label">{t('cost.fees')}</span><input className="input" inputMode="decimal" value={form.brokerFeesMxn} onChange={(e) => setForm({ ...form, brokerFeesMxn: e.target.value })} /></label>
+        <label className="field"><span className="label">{t('cost.fx')}</span><input className="input" inputMode="decimal" value={form.fxRate} onChange={(e) => setForm({ ...form, fxRate: e.target.value })} /></label>
         <button type="submit" className="btn" data-testid="calc-cost">{t('cost.calculate')}</button>
       </form>
       <ErrorNote message={error} />
@@ -50,7 +50,7 @@ export function CostView() {
 
       {shown?.status === 'calculado' ? (
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)]">
-          <Sheet id="cost-breakdown" title={t('cost.title')} aside={<DemoTag>FX DEMO {shown.inputs.fxRate}</DemoTag>}>
+          <Sheet id="cost-breakdown" title={t('cost.title')} aside={<span className="label">{t('pay.rate')} {shown.inputs.fxRate}</span>}>
             <div className="table-scroll">
               <table className="ledger" data-testid="cost-table">
                 <thead><tr><th>{t('cost.component')}</th><th>{t('cost.basis')}</th><th className="num-col">{t('cost.amount')}</th></tr></thead>

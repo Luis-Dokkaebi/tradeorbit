@@ -9,7 +9,9 @@ interface DemoBandProps {
   onToggleNotes: () => void;
 }
 
-/** Slim demo strip, visible on every screen (US-12, principle 4): quiet, but never absent. */
+/** Presenter-only controls (scenario, reset, replay, notes, language). Shown only with ?presentador in the URL. */
+export const isPresenterMode = (): boolean => new URLSearchParams(window.location.search).has('presentador');
+
 export function DemoBand({ notesOpen, onToggleNotes }: DemoBandProps) {
   const t = useT();
   const { server, ctx } = useServer();

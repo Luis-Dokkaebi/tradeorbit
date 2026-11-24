@@ -8,18 +8,11 @@ export function Stamp({ tone, children, enter = false }: { tone: StampTone; chil
   return <span className={`stamp stamp-${tone}${enter ? ' stamp-enter' : ''}`}>{children}</span>;
 }
 
-/** The DEMO tag (principle 4): every simulated number carries it, as a small quiet note. */
-export function DemoTag({ children }: { children?: ReactNode }) {
-  const t = useT();
-  return <span className="demo-note">{children ?? t('demo.tag')}</span>;
-}
-
-export function Amount({ value, currency, demo = false }: { value: string; currency: string; demo?: boolean }) {
+export function Amount({ value, currency }: { value: string; currency: string }) {
   return (
     <span className="figure">
       {formatAmount(value)}
       <small>{currency}</small>
-      {demo ? <> <DemoTag /></> : null}
     </span>
   );
 }

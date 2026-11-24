@@ -10,7 +10,7 @@ interface ServerValue {
 
 const ServerContext = createContext<ServerValue | null>(null);
 
-export const DEFAULT_ACTOR = 'Dirección general (aprobador de referencia, DEMO)';
+export const DEFAULT_ACTOR = 'Dirección general';
 
 export function ServerProvider({ server, children }: { server: KiilonovaServer; children: ReactNode }) {
   const [actor, setActor] = useState(DEFAULT_ACTOR);
