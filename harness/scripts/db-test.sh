@@ -9,9 +9,12 @@ if [ -z "$PGBIN" ] || [ ! -x "$PGBIN/initdb" ]; then
   exit 3
 fi
 
-WORK="$(mktemp -d -t kiilonova-pg-XXXXXX)"
-chmod 777 "$WORK"
 PORT="${PGTEST_PORT:-55432}"
+[[ "$PORT" =~ ^[0-9]{2,5}$ ]] || { echo "PGTEST_PORT inválido" >&2; exit 2; }
+WORK="$(mktemp -d -t kiilonova-pg-XXXXXX)"
+# Private to the cluster owner: no other local user can swap the SQL files or reach the socket.
+chmod 700 "$WORK"
+if [ "$(id -u)" = "0" ]; then chown postgres "$WORK"; fi
 as_pg() { if [ "$(id -u)" = "0" ]; then su postgres -s /bin/bash -c "$1"; else bash -c "$1"; fi; }
 cleanup() {
   as_pg "'$PGBIN/pg_ctl' -D '$WORK/data' -m immediate stop" >/dev/null 2>&1 || true
@@ -20,9 +23,10 @@ cleanup() {
 trap cleanup EXIT
 
 as_pg "'$PGBIN/initdb' -D '$WORK/data' -U postgres -A trust" >/dev/null
-as_pg "'$PGBIN/pg_ctl' -D '$WORK/data' -o \"-p $PORT -k $WORK -c listen_addresses=''\" -l '$WORK/log' -w start" >/dev/null
+as_pg "'$PGBIN/pg_ctl' -D '$WORK/data' -o \"-p $PORT -k $WORK -c listen_addresses='' -c unix_socket_permissions=0700\" -l '$WORK/log' -w start" >/dev/null
 for f in "$ROOT"/supabase/migrations/*.sql "$ROOT/supabase/tests/rls.sql"; do cp "$f" "$WORK/"; done
-chmod 644 "$WORK"/*.sql
+chmod 600 "$WORK"/*.sql
+if [ "$(id -u)" = "0" ]; then chown postgres "$WORK"/*.sql; fi
 for f in "$WORK"/0*.sql; do
   as_pg "psql -h '$WORK' -p $PORT -U postgres -d postgres -v ON_ERROR_STOP=1 -q -f '$f'"
 done

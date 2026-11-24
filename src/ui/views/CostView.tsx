@@ -21,7 +21,7 @@ export function CostView() {
 
   const latest = server.latestQuote(ctx, shipment.id);
   const shown: LandedCostResult | null = result ?? latest;
-  const confirmedBy = server.getFlags().tariffConfirmedBy[shipment.id];
+  const confirmation = server.tariffConfirmation(ctx, shipment.id);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -34,7 +34,7 @@ export function CostView() {
       <form className="sheet sheet-body grid gap-4 sm:grid-cols-2 lg:grid-cols-[repeat(4,minmax(0,1fr))_auto] lg:items-end" onSubmit={submit}>
         <label className="field"><span className="label">{t('cost.hsCode')}</span><input className="input" value={form.hsCode} onChange={(e) => setForm({ ...form, hsCode: e.target.value })} data-testid="hs-input" /></label>
         <label className="field"><span className="label">{t('cost.freight')} · DEMO</span><input className="input" inputMode="decimal" value={form.freightUsd} onChange={(e) => setForm({ ...form, freightUsd: e.target.value })} /></label>
-        <label className="field"><span className="label">{t('cost.fees')}</span><input className="input" inputMode="decimal" value={form.brokerFeesMxn} onChange={(e) => setForm({ ...form, brokerFeesMxn: e.target.value })} /></label>
+        <label className="field"><span className="label">{t('cost.fees')} · DEMO</span><input className="input" inputMode="decimal" value={form.brokerFeesMxn} onChange={(e) => setForm({ ...form, brokerFeesMxn: e.target.value })} /></label>
         <label className="field"><span className="label">{t('cost.fx')} · DEMO</span><input className="input" inputMode="decimal" value={form.fxRate} onChange={(e) => setForm({ ...form, fxRate: e.target.value })} /></label>
         <button type="submit" className="btn" data-testid="calc-cost">{t('cost.calculate')}</button>
       </form>
@@ -80,15 +80,15 @@ export function CostView() {
               <Field label={t('cost.source')}><span className="text-sm">{shown.rule.source}</span></Field>
               <div className="grid grid-cols-2 gap-4">
                 <Field label={t('cost.published')}><span className="mono">{formatDateEs(shown.rule.publishedAt)}</span></Field>
-                <Field label={t('cost.validity')}><span className="mono">{formatDateEs(shown.rule.validFrom)} – {shown.rule.validTo ? formatDateEs(shown.rule.validTo) : 'vigente'}</span></Field>
+                <Field label={t('cost.validity')}><span className="mono">{formatDateEs(shown.rule.validFrom)} – {shown.rule.validTo ? formatDateEs(shown.rule.validTo) : t('cost.open')}</span></Field>
               </div>
               <Field label={t('cost.noms')}>
                 <ul className="grid gap-1">{shown.rule.noms.map((n) => <li key={n.code}><span className="mono">{n.code}</span> <span className="note">{n.title}</span></li>)}</ul>
               </Field>
             </dl>
             <div className="mt-4 border-t border-rule pt-4">
-              {confirmedBy ? (
-                <Stamp tone="ok" enter>{t('cost.confirmedBy')}: {confirmedBy}</Stamp>
+              {confirmation?.hsCode === shown.rule.hsCode ? (
+                <Stamp tone="ok" enter>{t('cost.confirmedBy')}: {confirmation.by}</Stamp>
               ) : (
                 <button type="button" className="btn btn-decision" onClick={() => run(() => server.confirmTariff(ctx, shipment.id, shown.rule.hsCode))} data-testid="confirm-hs">{t('cost.confirm')}</button>
               )}

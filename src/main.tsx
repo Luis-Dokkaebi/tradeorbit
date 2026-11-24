@@ -1,4 +1,4 @@
-import { StrictMode, useState } from 'react';
+import { StrictMode, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { I18nContext, type Locale } from './i18n';
 import { KiilonovaServer } from './server/server';
@@ -10,8 +10,18 @@ const server = new KiilonovaServer({ scenario: 'discrepancia' });
 
 function Root() {
   const [locale, setLocale] = useState<Locale>('es');
+  const value = useMemo(
+    () => ({
+      locale,
+      setLocale: (l: Locale) => {
+        setLocale(l);
+        document.documentElement.lang = l === 'es' ? 'es-MX' : l;
+      },
+    }),
+    [locale],
+  );
   return (
-    <I18nContext.Provider value={{ locale, setLocale: (l) => { setLocale(l); document.documentElement.lang = l === 'es' ? 'es-MX' : l; } }}>
+    <I18nContext.Provider value={value}>
       <ServerProvider server={server}>
         <App />
       </ServerProvider>

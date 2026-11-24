@@ -7,7 +7,27 @@ import { z } from 'zod';
 
 export const DecimalString = z
   .string()
+  .max(32)
   .regex(/^-?\d+(\.\d+)?$/, 'Debe ser un decimal en texto, no un flotante');
+
+/** Strictly positive decimal with at most 6 decimals (amounts, rates). */
+export const PositiveDecimal = z
+  .string()
+  .max(32)
+  .regex(/^\d+(\.\d{1,6})?$/, 'Debe ser un decimal positivo')
+  .refine((v) => Number(v) > 0, 'Debe ser mayor que cero');
+
+/** Non-negative decimal with at most 2 decimals (freight, fees). */
+export const NonNegativeMoney = z.string().max(32).regex(/^\d+(\.\d{1,2})?$/, 'Debe ser un importe con hasta 2 decimales');
+
+/** Single-line free text: no control characters, bounded length (prevents forging pseudo-document lines). */
+export const SingleLine = (max: number) =>
+  z
+    .string()
+    .trim()
+    .min(1)
+    .max(max)
+    .refine((v) => ![...v].some((c) => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127), 'Sin saltos de línea ni caracteres de control');
 
 export const Currency = z.enum(['MXN', 'USD', 'USDC', 'CNY']);
 export type Currency = z.infer<typeof Currency>;
@@ -94,7 +114,7 @@ export const Discrepancy = z.object({
   shipmentId: z.string().min(1),
   type: DiscrepancyType,
   severity: z.enum(['alta', 'media', 'baja']),
-  documentIds: z.array(z.string().min(1)).min(2, 'Una discrepancia exige evidencia de dos documentos'),
+  documentIds: z.array(z.string().min(1)).min(2, 'Una discrepancia exige evidencia de dos documentos').max(10),
   expected: z.string(),
   found: z.string(),
   status: z.enum(['abierta', 'resuelta']),
@@ -197,7 +217,7 @@ export type PaymentProposal = z.infer<typeof PaymentProposal>;
 export const ProposalRequest = z.object({
   shipment_id: z.string().min(1),
   corridor: z.literal('MX-CN'),
-  send: z.object({ amount: DecimalString, currency: z.literal('MXN') }),
+  send: z.object({ amount: PositiveDecimal, currency: z.literal('MXN') }),
   receive: z.object({ currency: z.literal('USDC') }),
   mode: z.literal('simulation'),
   requires_human_approval: z.literal(true),
@@ -209,8 +229,8 @@ export const DecisionInput = z
   .object({
     proposalId: z.string().min(1),
     decision: z.enum(['aprobada', 'rechazada']),
-    approver: z.string().trim().min(3, 'Indica quién decide'),
-    reason: z.string().trim().optional(),
+    approver: SingleLine(120).refine((v) => v.length >= 3, 'Indica quién decide'),
+    reason: z.string().trim().max(500).optional(),
     version: z.number().int().positive(),
   })
   .refine((d) => d.decision === 'aprobada' || (d.reason !== undefined && d.reason.length >= 5), {
@@ -276,6 +296,7 @@ export const AuditEntry = z.object({
   action: z.string().min(1),
   entity: z.string().min(1),
   entityId: z.string(),
+  payloadHash: z.string().regex(/^[0-9a-f]{64}$/),
   contentHash: z.string().regex(/^[0-9a-f]{64}$/),
   prevHash: z.string().regex(/^[0-9a-f]{64}$/),
 });
@@ -321,7 +342,7 @@ export const Policy = z
     proposedBy: z.string().min(1),
     approvedBy: z.string().nullable(),
     evaluation: z
-      .object({ fieldAccuracy: DecimalString, plantedFound: z.number().int(), falsePositives: z.number().int(), repetitions: z.number().int() })
+      .object({ fieldAccuracy: DecimalString, plantedFound: z.number().int(), falsePositives: z.number().int(), repetitions: z.number().int(), measured: z.boolean() })
       .nullable(),
   })
   .refine((p) => p.status === 'sandbox' || p.approvedBy !== null, {
@@ -336,3 +357,29 @@ export const AskResult = z.object({
   sinDato: z.boolean(),
 });
 export type AskResult = z.infer<typeof AskResult>;
+
+export const LandedCostRequest = z.object({
+  hsCode: z.string().trim().regex(/^\d{4}\.\d{2}\.\d{2}$/, 'Fracción con formato 0000.00.00'),
+  freightUsd: NonNegativeMoney,
+  brokerFeesMxn: NonNegativeMoney,
+  fxRate: PositiveDecimal.optional(),
+});
+export type LandedCostRequest = z.infer<typeof LandedCostRequest>;
+
+export const ShipmentForm = z.object({
+  supplier: SingleLine(120),
+  goods: SingleLine(160),
+  quantity: z.number().int().positive().max(1_000_000),
+  amount: PositiveDecimal,
+  eta: IsoDate,
+  incoterm: SingleLine(40),
+});
+export type ShipmentForm = z.infer<typeof ShipmentForm>;
+
+export const UploadedFile = z.object({
+  id: z.string().max(64).optional(),
+  type: DocumentType,
+  fileName: SingleLine(120),
+  pages: z.array(z.array(z.string().max(500)).max(200)).max(20),
+});
+export type UploadedFile = z.infer<typeof UploadedFile>;

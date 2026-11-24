@@ -15,6 +15,13 @@
   body {
     overflow-x: clip;
   }
+  html {
+    scroll-padding-top: 7rem;
+  }
+  ::placeholder {
+    color: var(--color-ink-3);
+    opacity: 1;
+  }
   body {
     background: var(--color-paper);
     color: var(--color-ink);
@@ -175,8 +182,7 @@
 
   /* ── DEMO band (always visible, US-12) ────────────── */
   .demo-band {
-    position: sticky;
-    top: 0;
+    position: static;
     z-index: 30;
     background-color: var(--color-sim-soft);
     background-image: var(--pattern-sim);
@@ -210,7 +216,11 @@
     background: var(--color-ink);
     color: var(--color-on-ink);
     cursor: pointer;
-    transition: transform 80ms ease-out, background-color 120ms ease-out;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .btn {
+      transition: transform 80ms ease-out, background-color 120ms ease-out;
+    }
   }
   .btn:hover {
     background: var(--color-ink-2);
@@ -258,7 +268,7 @@
     font-size: var(--text-sm);
     color: var(--color-ink);
     background: var(--color-paper-2);
-    border: var(--rule-width) solid var(--color-rule-strong);
+    border: var(--rule-width) solid var(--color-control-border);
     border-radius: var(--radius);
   }
   .input:hover {
@@ -279,6 +289,7 @@
     overflow: hidden;
   }
   .seg button {
+    min-height: 2rem;
     padding: var(--space-1) var(--space-3);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
@@ -296,6 +307,15 @@
   .seg button[aria-pressed='true'] {
     background: var(--color-sim);
     color: var(--color-on-ink);
+  }
+  .seg button:focus-visible {
+    outline-offset: -4px;
+  }
+  .seg button[aria-pressed='true']:focus-visible {
+    outline-color: var(--color-on-ink);
+  }
+  .demo-band .label {
+    color: var(--color-ink-2);
   }
 
   /* ── navigation ───────────────────────────────────── */
@@ -317,6 +337,9 @@
     color: var(--color-ink-2);
     white-space: nowrap;
     text-decoration: none;
+  }
+  .tab:focus-visible {
+    outline-offset: -3px;
   }
   .tab:hover {
     color: var(--color-ink);
@@ -503,5 +526,25 @@
   .wrap-any {
     overflow-wrap: anywhere;
     min-width: 0;
+  }
+}
+
+@layer components {
+  .file-picker:focus-within {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* The DEMO band stays in view on wide screens; on narrow screens it scrolls away so it never hides focus. */
+  @media (min-width: 900px) {
+    .demo-band {
+      position: sticky;
+      top: 0;
+    }
+  }
+  .route .stamp {
+    white-space: normal;
   }
 }

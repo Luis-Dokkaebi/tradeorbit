@@ -14,13 +14,18 @@ export function OpenFile() {
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    run(() => server.createShipmentFromForm(ctx, { ...form, quantity: Number(form.quantity) }));
+    run(() => {
+      const quantity = Number(form.quantity);
+      if (!Number.isInteger(quantity) || quantity <= 0) throw new Error('La cantidad debe ser un entero positivo');
+      if (!/^\d+(\.\d{1,2})?$/.test(form.amount)) throw new Error('El importe debe ser un decimal con hasta 2 decimales');
+      server.createShipmentFromForm(ctx, { ...form, quantity });
+    });
   };
 
   return (
     <div className="grid gap-5">
       <PageHead title={t('open.title')} lede={t('open.lede')} />
-      <div className="seg w-fit" role="group">
+      <div className="seg w-fit" role="group" aria-label={t('open.title')}>
         <button type="button" aria-pressed={mode === 'doc'} onClick={() => setMode('doc')}>{t('open.fromDoc')}</button>
         <button type="button" aria-pressed={mode === 'form'} onClick={() => setMode('form')}>{t('open.fromForm')}</button>
       </div>

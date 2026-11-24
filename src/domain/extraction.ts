@@ -12,9 +12,10 @@ interface FieldSpec {
   label: string;
   patterns: readonly { re: RegExp; confidence: number }[];
   normalize?: (raw: string) => string;
+  numeric?: boolean;
 }
 
-const amount = (raw: string): string => raw.replace(/USD|USDC|MXN|\s|,/g, '');
+const amount = (raw: string): string => raw.replace(/USD|USDC|MXN|\s/g, '').replace(/,(?=\d{3}(\D|$))/g, '');
 const integer = (raw: string): string => raw.replace(/[^\d]/g, '');
 const decimalNumber = (raw: string): string => raw.replace(/[^\d.]/g, '');
 const dateEs = (raw: string): string => {
@@ -29,9 +30,9 @@ const SPECS: Record<DocumentType, readonly FieldSpec[]> = {
     { key: 'folio', label: 'Folio', patterns: [{ re: exact('Folio'), confidence: 0.98 }] },
     { key: 'proveedor', label: 'Proveedor', patterns: [{ re: exact('Proveedor'), confidence: 0.97 }] },
     { key: 'mercancia', label: 'Mercancía', patterns: [{ re: exact('Mercancía'), confidence: 0.95 }] },
-    { key: 'cantidad', label: 'Cantidad', patterns: [{ re: exact('Cantidad'), confidence: 0.98 }], normalize: integer },
-    { key: 'precio_unitario', label: 'Precio unitario', patterns: [{ re: exact('Precio unitario'), confidence: 0.97 }], normalize: amount },
-    { key: 'importe', label: 'Importe', patterns: [{ re: exact('Importe total'), confidence: 0.98 }], normalize: amount },
+    { key: 'cantidad', label: 'Cantidad', patterns: [{ re: exact('Cantidad'), confidence: 0.98 }], normalize: integer, numeric: true },
+    { key: 'precio_unitario', label: 'Precio unitario', patterns: [{ re: exact('Precio unitario'), confidence: 0.97 }], normalize: amount, numeric: true },
+    { key: 'importe', label: 'Importe', patterns: [{ re: exact('Importe total'), confidence: 0.98 }], normalize: amount, numeric: true },
     { key: 'moneda', label: 'Moneda', patterns: [{ re: exact('Moneda'), confidence: 0.99 }] },
     { key: 'incoterm', label: 'Incoterm', patterns: [{ re: exact('Incoterm'), confidence: 0.96 }] },
     {
@@ -48,21 +49,21 @@ const SPECS: Record<DocumentType, readonly FieldSpec[]> = {
     { key: 'folio', label: 'Folio', patterns: [{ re: exact('Folio'), confidence: 0.98 }] },
     { key: 'proveedor', label: 'Proveedor', patterns: [{ re: exact('Proveedor'), confidence: 0.96 }] },
     { key: 'referencia_oc', label: 'Referencia OC', patterns: [{ re: exact('Referencia OC'), confidence: 0.97 }] },
-    { key: 'cantidad', label: 'Cantidad', patterns: [{ re: exact('Cantidad'), confidence: 0.98 }], normalize: integer },
-    { key: 'importe', label: 'Importe', patterns: [{ re: exact('Importe total'), confidence: 0.98 }], normalize: amount },
+    { key: 'cantidad', label: 'Cantidad', patterns: [{ re: exact('Cantidad'), confidence: 0.98 }], normalize: integer, numeric: true },
+    { key: 'importe', label: 'Importe', patterns: [{ re: exact('Importe total'), confidence: 0.98 }], normalize: amount, numeric: true },
     { key: 'moneda', label: 'Moneda', patterns: [{ re: exact('Moneda'), confidence: 0.99 }] },
   ],
   lista_empaque: [
     { key: 'proveedor', label: 'Proveedor', patterns: [{ re: exact('Proveedor'), confidence: 0.96 }] },
     { key: 'referencia_oc', label: 'Referencia OC', patterns: [{ re: exact('Referencia OC'), confidence: 0.97 }] },
-    { key: 'cantidad', label: 'Cantidad', patterns: [{ re: exact('Cantidad'), confidence: 0.98 }], normalize: integer },
-    { key: 'bultos', label: 'Bultos', patterns: [{ re: exact('Bultos'), confidence: 0.95 }], normalize: integer },
-    { key: 'peso_bruto', label: 'Peso bruto (kg)', patterns: [{ re: exact('Peso bruto'), confidence: 0.94 }], normalize: decimalNumber },
+    { key: 'cantidad', label: 'Cantidad', patterns: [{ re: exact('Cantidad'), confidence: 0.98 }], normalize: integer, numeric: true },
+    { key: 'bultos', label: 'Bultos', patterns: [{ re: exact('Bultos'), confidence: 0.95 }], normalize: integer, numeric: true },
+    { key: 'peso_bruto', label: 'Peso bruto (kg)', patterns: [{ re: exact('Peso bruto'), confidence: 0.94 }], normalize: decimalNumber, numeric: true },
   ],
   comprobante_pago: [
     { key: 'referencia', label: 'Referencia', patterns: [{ re: exact('Referencia'), confidence: 0.97 }] },
     { key: 'beneficiario', label: 'Beneficiario', patterns: [{ re: exact('Beneficiario'), confidence: 0.96 }] },
-    { key: 'importe', label: 'Importe', patterns: [{ re: exact('Importe'), confidence: 0.98 }], normalize: amount },
+    { key: 'importe', label: 'Importe', patterns: [{ re: exact('Importe'), confidence: 0.98 }], normalize: amount, numeric: true },
     { key: 'moneda', label: 'Moneda', patterns: [{ re: exact('Moneda'), confidence: 0.99 }] },
     { key: 'fecha', label: 'Fecha valor', patterns: [{ re: exact('Fecha valor'), confidence: 0.97 }], normalize: dateEs },
   ],
@@ -97,12 +98,16 @@ export const extractFields = (documentId: string, type: DocumentType, pages: rea
           const m = line.trim().match(p.re);
           if (m?.[1]) {
             const raw = m[1].trim();
+            const value = spec.normalize ? spec.normalize(raw) : raw;
+            // A normalized number that is not a plain decimal (e.g. "5.480,00") is never trusted.
+            const malformed = spec.numeric === true && !/^\d+(\.\d+)?$/.test(value);
+            const confidence = malformed ? Math.min(p.confidence, 0.5) : p.confidence;
             found = {
               key: spec.key,
               label: spec.label,
-              value: spec.normalize ? spec.normalize(raw) : raw,
-              confidence: p.confidence,
-              needsReview: p.confidence < threshold,
+              value: malformed ? raw : value,
+              confidence,
+              needsReview: confidence < threshold,
               source: { documentId, page: pageIndex + 1, box: boxFor(lineIndex) },
             };
             break;

@@ -69,12 +69,13 @@ e2e/              Playwright
 | `npm run e2e` | Sensor computacional (navegador) |
 | Revisor de spec (subagente) | Sensor inferencial |
 | `harness/hooks/guard-protected-files.mjs` (Claude Code PreToolUse) y `.githooks/pre-commit` | Control |
+| `.github/workflows/ci.yml` + `.github/CODEOWNERS` | Control (mismos sensores en CI; la constitución y `feature_list.json` requieren revisión del dueño) |
 
 ### Sensor inferencial
 Lanza un subagente revisor con: "Revisa el diff contra `specs/spec.md` y `specs/constitution.md`. Reporta violaciones de principios, criterios de aceptación no cubiertos y cifras sin evidencia o sin etiqueta DEMO." Corrige CRITICAL y HIGH antes del commit.
 
 ## Qué es simulado en este MVP
 
-- Las funciones de servidor corren en el navegador (`KiilonovaServer`) con estado en memoria; la migración de Supabase está lista y probada en Postgres, pero la app aún no está conectada a un proyecto Supabase.
+- Las funciones de servidor corren en el navegador (`KiilonovaServer`) con estado en memoria; la migración de Supabase está lista y probada en Postgres, pero la app aún no está conectada a un proyecto Supabase. En Supabase, las decisiones sobre propuestas pasan por `app.submit_proposal` y `app.decide_proposal`, nunca por UPDATE directo.
 - La extracción usa un extractor determinista sobre documentos semilla con capa de texto; no hay servicio de IA ni OCR conectado (PDF o imagen: revisión manual).
 - Tipo de cambio, rutas, comisiones, flete y eventos de embarque son DEMO.

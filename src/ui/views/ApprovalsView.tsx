@@ -13,10 +13,11 @@ export function ApprovalsView() {
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const pending = server.listProposals(ctx).filter((p) => p.status === 'en_aprobacion');
   const approvals = server.listApprovals(ctx);
-  const shipmentId = pending[0]?.shipment_id ?? server.listShipments(ctx)[0]?.id;
-  const rec = shipmentId ? server.getReconciliation(ctx, shipmentId) : null;
-  const quote = shipmentId ? server.latestQuote(ctx, shipmentId) : null;
-  const openDisc = shipmentId ? server.listDiscrepancies(ctx, shipmentId).filter((d) => d.status === 'abierta') : [];
+  const evidenceFor = (shipmentId: string) => ({
+    rec: server.getReconciliation(ctx, shipmentId),
+    quote: server.latestQuote(ctx, shipmentId),
+    openDisc: server.listDiscrepancies(ctx, shipmentId).filter((d) => d.status === 'abierta'),
+  });
 
   return (
     <div className="grid gap-5">
@@ -27,31 +28,35 @@ export function ApprovalsView() {
       </label>
       <ErrorNote message={error} />
       {pending.length === 0 ? <p className="note" data-testid="inbox-empty">{t('approvals.empty')}</p> : null}
-      {pending.map((p) => (
+      {pending.map((p) => {
+        const { rec, quote, openDisc } = evidenceFor(p.shipment_id);
+        return (
         <section key={p.id} className="decision-surface grid gap-4 p-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]" data-testid={`inbox-${p.route}`}>
           <ProposalCard p={p} />
           <div className="grid content-start gap-3">
-            <h3 className="label">{t('approvals.evidence')}</h3>
+            <h2 className="label">{t('approvals.evidence')}</h2>
             <ul className="grid gap-2 text-sm">
-              {rec ? <li><Citation>{rec.id}</Citation> {t('rec.balance')}: <span className="figure">{formatAmount(rec.balance)} USD</span> · {t(`rec.${rec.status}`)}</li> : null}
-              {quote ? <li><Citation>{quote.id}</Citation> {t('cost.total')}: <span className="figure">{formatAmount(quote.totalMxn)} MXN</span></li> : <li className="note">{t('cost.title')}: {t('state.pending')}</li>}
+              <li><Citation>{rec.id}</Citation> {t('rec.balance')}: <span className="figure">{formatAmount(rec.balance)} USD</span> · {t(`rec.${rec.status}`)}</li>
+              {quote ? <li><Citation>{quote.id}</Citation> {t('cost.total')}: <span className="figure">{formatAmount(quote.totalMxn)} MXN</span> <span className="stamp stamp-sim">DEMO</span> {quote.rule.verification === 'por_verificar' ? <span className="stamp stamp-wait">{t('cost.unverified')}</span> : null}</li> : <li className="note">{t('cost.title')}: {t('state.pending')}</li>}
               {openDisc.length > 0 ? <li><Stamp tone="decision">{openDisc.length} {t('disc.title').toLowerCase()}</Stamp></li> : null}
             </ul>
+            {openDisc.some((d) => d.severity === 'alta') ? <p className="note text-decision" data-testid={`risk-${p.route}`}>{t('approvals.riskNote')}</p> : null}
             <label className="field">
               <span className="label">{t('approvals.reason')}</span>
               <textarea className="input" value={reasons[p.id] ?? ''} onChange={(e) => setReasons({ ...reasons, [p.id]: e.target.value })} data-testid={`reason-${p.route}`} />
             </label>
             <div className="flex flex-wrap gap-2">
-              <button type="button" className="btn btn-decision" onClick={() => run(() => server.decide(ctx, { proposalId: p.id, decision: 'aprobada', approver: ctx.actor, version: p.version }))} data-testid={`approve-${p.route}`}>
+              <button type="button" className="btn btn-decision" onClick={() => run(() => server.decide(ctx, { proposalId: p.id, decision: 'aprobada', approver: ctx.actor, reason: reasons[p.id], version: p.version }))} data-testid={`approve-${p.route}`} aria-label={`${t('approvals.approve')} ${p.id}`}>
                 {t('approvals.approve')}
               </button>
-              <button type="button" className="btn btn-quiet" onClick={() => run(() => server.decide(ctx, { proposalId: p.id, decision: 'rechazada', approver: ctx.actor, reason: reasons[p.id], version: p.version }))} data-testid={`reject-${p.route}`}>
+              <button type="button" className="btn btn-quiet" onClick={() => run(() => server.decide(ctx, { proposalId: p.id, decision: 'rechazada', approver: ctx.actor, reason: reasons[p.id], version: p.version }))} data-testid={`reject-${p.route}`} aria-label={`${t('approvals.reject')} ${p.id}`}>
                 {t('approvals.reject')}
               </button>
             </div>
           </div>
         </section>
-      ))}
+        );
+      })}
 
       {approvals.length > 0 ? (
         <section className="sheet" aria-labelledby="history">

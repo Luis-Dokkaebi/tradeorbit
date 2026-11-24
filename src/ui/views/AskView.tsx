@@ -15,13 +15,20 @@ export function AskView() {
   const shipment = useShipment();
   const [run, error] = useAction();
   const [q, setQ] = useState('');
-  const [history, setHistory] = useState<AskResult[]>([]);
+  const [history, setHistory] = useState<{ id: number; result: AskResult }[]>([]);
   if (!shipment) return <NeedsFile />;
 
   const ask = (question: string) => {
     if (question.trim().length === 0) return;
-    run(() => setHistory((h) => [server.ask(ctx, shipment.id, question.slice(0, 300)), ...h]));
-    setQ('');
+    let result: AskResult | null = null;
+    const ok = run(() => {
+      result = server.ask(ctx, shipment.id, question.slice(0, 300));
+    });
+    if (ok && result) {
+      const entry = { id: Date.now() + Math.random(), result };
+      setHistory((h) => [entry, ...h]);
+      setQ('');
+    }
   };
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -35,15 +42,15 @@ export function AskView() {
         <div className="flex flex-wrap gap-2">
           {SUGGESTIONS.map((s) => <button key={s} type="button" className="btn btn-quiet" onClick={() => ask(s)}>{s}</button>)}
         </div>
-        <div className="flex flex-wrap gap-2">
-          <label className="min-w-0 flex-1"><span className="sr-only">{t('ask.placeholder')}</span><input className="input" placeholder={t('ask.placeholder')} value={q} maxLength={300} onChange={(e) => setQ(e.target.value)} data-testid="ask-input" /></label>
+        <div className="flex flex-wrap items-end gap-2">
+          <label className="field min-w-0 flex-1"><span className="label">{t('ask.placeholder')}</span><input className="input" placeholder={t('ask.placeholder')} value={q} maxLength={300} onChange={(e) => setQ(e.target.value)} data-testid="ask-input" /></label>
           <button type="submit" className="btn">{t('ask.send')}</button>
         </div>
       </form>
       <ErrorNote message={error} />
-      <ol className="grid gap-3" data-testid="answers">
-        {history.map((r, i) => (
-          <li key={`${r.question}-${history.length - i}`} className={r.sinDato ? 'sheet sheet-body grid gap-2' : 'sheet sheet-body grid gap-2'}>
+      <ol className="grid gap-3" data-testid="answers" aria-live="polite">
+        {history.map(({ id, result: r }) => (
+          <li key={id} className="sheet sheet-body grid gap-2">
             <span className="label">{r.question}</span>
             <p className="text-lg">{r.answer}</p>
             {r.sinDato ? <Stamp tone="neutral">{t('cost.sinDato')}</Stamp> : (

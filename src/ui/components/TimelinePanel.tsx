@@ -15,7 +15,7 @@ export function TimelinePanel({ shipment }: { shipment: Shipment }) {
   const [run, error] = useAction();
   const timeline = server.getTimeline(ctx, shipment.id);
   const [type, setType] = useState<ShipmentEventType>('arribo');
-  const [date, setDate] = useState(server.today());
+  const [date, setDate] = useState(() => server.today());
   const overdue = timeline.some((s) => s.state === 'vencido');
   const stateLabel = (s: string) => (s === 'hecho' ? t('state.done') : s === 'vencido' ? t('state.delayed') : s === 'estimado' ? t('state.estimated') : t('state.pending'));
 

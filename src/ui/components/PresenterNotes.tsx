@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useT } from '../../i18n';
 import { href, type Route } from '../useHashRoute';
 
@@ -14,8 +15,21 @@ const SCRIPT: readonly { at: string; title: string; story: string; route: Route;
 
 export function PresenterNotes({ onClose }: { onClose: () => void }) {
   const t = useT();
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    ref.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      previous?.focus();
+    };
+  }, [onClose]);
   return (
-    <aside className="drawer" aria-label={t('notes.title')} data-testid="presenter-notes">
+    <aside id="presenter-notes" ref={ref} tabIndex={-1} className="drawer" aria-label={t('notes.title')} data-testid="presenter-notes">
       <header className="sheet-head">
         <h2 className="text-lg">{t('notes.title')}</h2>
         <button type="button" className="btn btn-quiet" onClick={onClose}>{t('common.close')}</button>

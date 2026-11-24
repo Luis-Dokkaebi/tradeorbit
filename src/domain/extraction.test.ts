@@ -60,6 +60,13 @@ describe('extraction eval on the seed set (US-02, NFR-01, NFR-02)', () => {
     expect(eta?.needsReview).toBe(false);
   });
 
+  it('never trusts a locale-ambiguous amount like 5.480,00', () => {
+    const r = extractFields('x', 'factura', [['Importe total: USD 5.480,00']]);
+    const f = r.fields.find((x) => x.key === 'importe');
+    expect(f?.needsReview).toBe(true);
+    expect(f?.value).toBe('USD 5.480,00');
+  });
+
   it('sends an unreadable scan to manual review', () => {
     const scan = seedLibrary('discrepancia', TODAY).find((d) => d.id.endsWith('-ILEG'));
     if (!scan) throw new Error('no scan');

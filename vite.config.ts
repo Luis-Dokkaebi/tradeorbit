@@ -13,6 +13,7 @@ const CSP = [
   "connect-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",
+  "form-action 'self'",
 ].join('; ');
 
 const cspPlugin = (): Plugin => ({

@@ -23,5 +23,5 @@ test('selector de escenarios, reinicio y reproducción (US-12, US-07, US-08)', a
   await expect(page.getByTestId('open-from-po')).toBeVisible();
 
   await page.getByTestId('demo-replay').click();
-  await expect(page.getByTestId('replay-banner')).toContainText('no es ejecución en vivo');
+  await expect(page.getByTestId('replay-banner')).toContainText('las nuevas se ejecutan en vivo y quedan marcadas');
 });

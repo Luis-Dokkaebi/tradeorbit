@@ -21,7 +21,7 @@ export function Masthead({ route }: { route: Route }) {
   return (
     <header className="mx-auto w-full max-w-shell px-4 pt-5">
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 pb-4">
-        <a href={href('expediente')} className="grid gap-1 no-underline" aria-label={t('app.name')}>
+        <a href={href('expediente')} className="grid gap-1 no-underline">
           <span className="wordmark">KIILONOVA&nbsp;TRADE</span>
           <span className="label">{t('app.tagline')} · MX ← CN</span>
         </a>
@@ -31,7 +31,7 @@ export function Masthead({ route }: { route: Route }) {
         {NAV.map((n) => (
           <a key={n.route} className="tab" href={href(n.route)} aria-current={route === n.route ? 'page' : undefined} data-testid={`nav-${n.route}`}>
             {t(n.key)}
-            {n.route === 'aprobaciones' && waiting > 0 ? <span className="count-decision" aria-label={`${waiting}`}>{waiting}</span> : null}
+            {n.route === 'aprobaciones' && waiting > 0 ? <span className="count-decision">{waiting}<span className="sr-only"> {t('approvals.pending')}</span></span> : null}
           </a>
         ))}
       </nav>

@@ -22,5 +22,5 @@ export const TARIFF_RULES: readonly TariffRule[] = [
 ];
 
 /** Fixed-rate contributions with their legal source. */
-export const DTA_RATE = { rate: '0.008', source: 'Ley Federal de Derechos, art. 49 fr. I — 8 al millar sobre el valor en aduana' } as const;
-export const IVA_RATE = { rate: '0.16', source: 'Ley del IVA, arts. 1 y 27 — base: valor en aduana + IGI + DTA' } as const;
+export const DTA_RATE = { rate: '0.008', source: 'Ley Federal de Derechos, art. 49 fr. I — 8 al millar sobre el valor en aduana · v1 · vigencia por confirmar contra la LFD 2026 (DEMO)' } as const;
+export const IVA_RATE = { rate: '0.16', source: 'Ley del IVA, arts. 1 y 27 — base: valor en aduana + IGI + DTA · v1 · tasa general vigente desde 2010' } as const;

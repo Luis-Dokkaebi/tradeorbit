@@ -16,7 +16,7 @@ export function DiscrepanciesPanel({ shipment }: { shipment: Shipment }) {
   if (list.length === 0) {
     return (
       <section className="sheet sheet-body flex items-center justify-between gap-3" aria-label={t('disc.title')} data-testid="discrepancies-none">
-        <span className="font-display text-lg">{t('disc.title')}</span>
+        <h2 className="text-lg">{t('disc.title')}</h2>
         <Stamp tone="ok">{t('disc.none')}</Stamp>
       </section>
     );
@@ -26,7 +26,7 @@ export function DiscrepanciesPanel({ shipment }: { shipment: Shipment }) {
     <section className={open.length > 0 ? 'decision-surface' : 'sheet'} aria-labelledby="disc-title" data-testid="discrepancies">
       <header className="sheet-head">
         <h2 id="disc-title" className="text-lg">{t('disc.title')}</h2>
-        <span className="count-decision">{open.length}</span>
+        <span className="count-decision">{open.length}<span className="sr-only"> {t('disc.open').toLowerCase()}</span></span>
       </header>
       <ErrorNote message={error} />
       <ol className="grid">
@@ -49,10 +49,10 @@ export function DiscrepanciesPanel({ shipment }: { shipment: Shipment }) {
               {d.status === 'abierta' ? (
                 <div className="flex flex-wrap items-end gap-2">
                   <label className="field min-w-0 flex-1">
-                    <span className="sr-only">{t('disc.resolveNote')}</span>
+                    <span className="label">{t('disc.resolveNote')}</span>
                     <input className="input" placeholder={t('disc.resolveNote')} value={notes[d.id] ?? ''} onChange={(e) => setNotes({ ...notes, [d.id]: e.target.value })} />
                   </label>
-                  <button type="button" className="btn btn-decision" onClick={() => run(() => server.resolveDiscrepancy(ctx, d.id, notes[d.id] ?? ''))}>{t('disc.resolve')}</button>
+                  <button type="button" className="btn btn-decision" onClick={() => run(() => server.resolveDiscrepancy(ctx, d.id, notes[d.id] ?? ''))} aria-label={`${t('disc.resolve')}: ${d.type}`}>{t('disc.resolve')}</button>
                 </div>
               ) : null}
             </div>

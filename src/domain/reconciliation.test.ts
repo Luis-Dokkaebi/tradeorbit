@@ -42,6 +42,23 @@ describe('reconciliation (US-09, T-014)', () => {
     expect(r.status).toBe('pendiente');
   });
 
+  it('never reconciles while a discrepancy is open', () => {
+    const r = reconcile({
+      orderedAmount: '5480.00', orderedQty: 200, delivered: true, openDiscrepancies: 1,
+      documents: [doc('f', 'factura', { importe: '5480.00' }), doc('p', 'comprobante_pago', { importe: '5480.00' }), doc('l', 'lista_empaque', { cantidad: '200' })],
+    });
+    expect(r.status).toBe('con_diferencia');
+  });
+
+  it('does not add a payment in another currency to USD', () => {
+    const r = reconcile({
+      orderedAmount: '5480.00', orderedQty: 200, delivered: false,
+      documents: [doc('f', 'factura', { importe: '5480.00', moneda: 'USD' }), doc('p', 'comprobante_pago', { importe: '100000.00', moneda: 'MXN' })],
+    });
+    expect(r.paid).toBe('0.00');
+    expect(r.status).toBe('con_diferencia');
+  });
+
   it('overpayment is a difference', () => {
     const r = reconcile({ orderedAmount: '100.00', orderedQty: 1, delivered: true, documents: [doc('f', 'factura', { importe: '100.00' }), doc('p', 'comprobante_pago', { importe: '120.00' })] });
     expect(r.status).toBe('con_diferencia');

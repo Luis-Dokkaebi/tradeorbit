@@ -25,11 +25,21 @@ export function DocumentsPanel({ shipment }: { shipment: Shipment }) {
       });
       return;
     }
-    void file.text().then((text) => {
-      const isText = file.type.startsWith('text/') || file.name.endsWith('.txt');
-      const lines = isText ? text.split(/\r?\n/).slice(0, 200) : [];
-      run(() => server.addDocument(ctx, shipment.id, { type: ownType, fileName: file.name, pages: [lines] }));
-    });
+    const shipmentId = shipment.id;
+    const epoch = server.getEpoch();
+    file
+      .text()
+      .then((text) => {
+        if (server.getEpoch() !== epoch) return; // scenario changed while reading: drop the stale upload
+        const isText = file.type.startsWith('text/') || file.name.toLowerCase().endsWith('.txt');
+        const lines = isText ? text.split(/\r?\n/).slice(0, 200) : [];
+        run(() => server.addDocument(ctx, shipmentId, { type: ownType, fileName: file.name.slice(0, 120), pages: [lines] }));
+      })
+      .catch((err: unknown) => {
+        run(() => {
+          throw err instanceof Error ? err : new Error('No se pudo leer el archivo');
+        });
+      });
   };
 
   return (
@@ -73,7 +83,7 @@ export function DocumentsPanel({ shipment }: { shipment: Shipment }) {
                       <dd className="mono text-sm">{f.value}</dd>
                       <dd className="flex items-center justify-end gap-2">
                         {f.needsReview ? <Stamp tone="decision">{f.confidence.toFixed(2)}</Stamp> : <span className="figure text-xs text-ink-3">{f.confidence.toFixed(2)}</span>}
-                        <span className="mono text-xs text-ink-3" title={`${t('file.origin')}: página ${f.source.page}, recuadro ${f.source.box.join(',')}`}>p.{f.source.page}·{f.source.box[1]}</span>
+                        <span className="mono text-xs text-ink-3" title={`${t('file.origin')}: página ${f.source.page}, recuadro aprox. ${f.source.box.join(',')}`}>p.{f.source.page}·≈{f.source.box[1]}</span>
                       </dd>
                     </div>
                   ))}
@@ -92,11 +102,11 @@ export function DocumentsPanel({ shipment }: { shipment: Shipment }) {
               {DocumentType.options.filter((o) => o !== 'orden_compra').map((o) => <option key={o} value={o}>{t(`doctype.${o}` as MessageKey)}</option>)}
             </select>
           </label>
-          <label className="btn btn-quiet cursor-pointer">
+          <label className="btn btn-quiet file-picker cursor-pointer">
             {t('docs.ownFile')}
-            <input type="file" accept=".txt,text/plain,application/pdf,image/*" className="sr-only" onChange={onOwnFile} />
+            <input type="file" accept=".txt,text/plain,application/pdf,image/*" className="sr-only" onChange={onOwnFile} aria-describedby="own-file-note" />
           </label>
-          <span className="note text-xs">PDF o imagen: sin servicio de OCR en el modo demo, pasa a revisión manual.</span>
+          <span id="own-file-note" className="note text-xs">PDF o imagen: sin servicio de OCR en el modo demo, pasa a revisión manual.</span>
         </div>
       </div>
     </Sheet>

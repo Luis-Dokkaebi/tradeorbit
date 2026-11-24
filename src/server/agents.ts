@@ -24,7 +24,7 @@ export const AGENTS: readonly AgentDefinition[] = [
 /** Write permissions per agent: the store refuses writes outside this map (least privilege). */
 export const AGENT_WRITE_PERMISSIONS: Record<AgentName, readonly string[]> = {
   orquestador: [],
-  documental: ['documents', 'discrepancies', 'shipments'],
+  documental: ['documents', 'discrepancies', 'shipments', 'suppliers'],
   aranceles_costo: ['landed_cost_quotes'],
   financiero: ['payment_proposals'],
   logistico: ['shipment_events', 'shipments'],

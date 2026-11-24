@@ -46,8 +46,8 @@ export const allSeedDocuments = (today: string): SeedDocument[] =>
   (['limpio', 'discrepancia', 'retraso'] as const).flatMap((s) => [purchaseOrderFor(s, today), ...supportingDocumentsFor(s, today)]);
 
 const POLICIES = (orgId: string): Policy[] => [
-  { id: 'POL-001', orgId, agent: 'documental', version: 'v1.2', scope: 'Extracción y cruce de documentos', status: 'activa', proposedBy: 'equipo', approvedBy: 'Responsable de gobernanza (DEMO)', evaluation: { fieldAccuracy: '1.00', plantedFound: 3, falsePositives: 0, repetitions: 5 } },
-  { id: 'POL-002', orgId, agent: 'documental', version: 'v1.3-sandbox', scope: 'Normalización agresiva de nombres de proveedor', status: 'sandbox', proposedBy: 'proponente_politicas', approvedBy: null, evaluation: { fieldAccuracy: '0.97', plantedFound: 2, falsePositives: 1, repetitions: 5 } },
+  { id: 'POL-001', orgId, agent: 'documental', version: 'v1.2', scope: 'Extracción y cruce de documentos', status: 'activa', proposedBy: 'equipo', approvedBy: 'Responsable de gobernanza (DEMO)', evaluation: null },
+  { id: 'POL-002', orgId, agent: 'documental', version: 'v1.3-sandbox', scope: 'Normalización agresiva de nombres de proveedor', status: 'sandbox', proposedBy: 'proponente_politicas', approvedBy: null, evaluation: { fieldAccuracy: '0.97', plantedFound: 2, falsePositives: 1, repetitions: 5, measured: false } },
   { id: 'POL-003', orgId, agent: 'financiero', version: 'v1.0', scope: 'Rutas de pago en modo solo proponer', status: 'activa', proposedBy: 'equipo', approvedBy: 'Responsable de gobernanza (DEMO)', evaluation: null },
   { id: 'POL-004', orgId, agent: 'aranceles_costo', version: 'v1.0', scope: 'Costo puesto con tabla versionada', status: 'activa', proposedBy: 'equipo', approvedBy: 'Responsable de gobernanza (DEMO)', evaluation: null },
 ];

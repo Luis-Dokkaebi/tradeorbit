@@ -1,7 +1,8 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-export const ROOT = new URL('../../', import.meta.url).pathname;
+export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 
 /** Recursively lists files under `dir` whose name matches `pattern`, skipping vendor and build folders. */
 export const walk = (dir, pattern, skip = ['node_modules', '.git', 'coverage', 'test-results', 'playwright-report']) => {

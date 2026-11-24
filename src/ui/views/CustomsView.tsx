@@ -1,6 +1,6 @@
 import { useT } from '../../i18n';
-import { PageHead, Stamp } from '../components/primitives';
-import { useServer } from '../serverContext';
+import { ErrorNote, PageHead, Stamp } from '../components/primitives';
+import { useAction, useServer } from '../serverContext';
 import { useShipment } from '../useShipment';
 import { NeedsFile } from './NeedsFile';
 
@@ -9,18 +9,22 @@ export function CustomsView() {
   const t = useT();
   const { server, ctx } = useServer();
   const shipment = useShipment();
+  const [run, error] = useAction();
   if (!shipment) return <NeedsFile />;
   const pkg = server.getCustomsPackage(ctx, shipment.id);
 
-  const download = () => {
-    const json = server.exportCustomsPackage(ctx, shipment.id);
-    const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `expediente-${shipment.id}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  const download = () =>
+    run(() => {
+      const json = server.exportCustomsPackage(ctx, shipment.id);
+      const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `expediente-${shipment.id}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
 
   return (
     <div className="grid gap-5">
@@ -37,9 +41,13 @@ export function CustomsView() {
         </ol>
       </section>
       <label className="decision-surface flex items-start gap-3 p-4">
-        <input type="checkbox" className="mt-1" checked={pkg.padronConfirmed} onChange={(e) => server.confirmPadron(ctx, shipment.id, e.target.checked)} data-testid="padron" />
+        <input type="checkbox" className="mt-1" checked={pkg.padronConfirmed} onChange={(e) => {
+          const checked = e.target.checked;
+          run(() => server.confirmPadron(ctx, shipment.id, checked));
+        }} data-testid="padron" />
         <span>{t('customs.padron')}</span>
       </label>
+      <ErrorNote message={error} />
       <button type="button" className="btn w-fit" onClick={download} data-testid="export">{t('customs.export')}</button>
     </div>
   );

@@ -3,15 +3,17 @@ import { AGENTS, POLICY_PROMOTION_GATE } from '../../server/agents';
 import { useT } from '../../i18n';
 import { dec } from '../../shared/money';
 import type { AuditEntry, Policy } from '../../shared/schemas';
-import { PageHead, Stamp } from '../components/primitives';
-import { useServer } from '../serverContext';
+import { ErrorNote, PageHead, Stamp } from '../components/primitives';
+import { useAction, useServer } from '../serverContext';
 
-const passesGate = (p: Policy): boolean =>
-  p.evaluation !== null &&
-  dec(p.evaluation.fieldAccuracy).gte(POLICY_PROMOTION_GATE.minFieldAccuracy) &&
-  p.evaluation.plantedFound >= POLICY_PROMOTION_GATE.plantedRequired &&
-  p.evaluation.falsePositives <= POLICY_PROMOTION_GATE.maxFalsePositives &&
-  p.evaluation.repetitions >= POLICY_PROMOTION_GATE.repetitions;
+type Evaluation = NonNullable<Policy['evaluation']>;
+
+const passesGate = (e: Evaluation): boolean =>
+  e.measured &&
+  dec(e.fieldAccuracy).gte(POLICY_PROMOTION_GATE.minFieldAccuracy) &&
+  e.plantedFound >= POLICY_PROMOTION_GATE.plantedRequired &&
+  e.falsePositives <= POLICY_PROMOTION_GATE.maxFalsePositives &&
+  e.repetitions >= POLICY_PROMOTION_GATE.repetitions;
 
 /** US-11: read-only governance. The only control is the global pause switch; there is no deploy path. */
 export function GovernanceView() {
@@ -22,8 +24,12 @@ export function GovernanceView() {
   const holds = runs.filter((r) => r.outcome === 'hold');
   const holdReasons = Object.entries(holds.reduce<Record<string, number>>((acc, r) => ({ ...acc, [r.holdReason ?? '—']: (acc[r.holdReason ?? '—'] ?? 0) + 1 }), {}));
   const audit = server.getAuditLog(ctx, actorFilter ? { actorType: actorFilter } : {});
-  const chainOk = server.auditLog.verifyChain() === null;
+  const chainOk = server.verifyAuditChain(ctx) === null;
+  const [run, error] = useAction();
   const paused = server.getFlags().paused;
+  const live = server.evaluateActiveExtractionPolicy();
+  const evaluationOf = (p: Policy): Evaluation | null =>
+    p.agent === 'documental' && p.status === 'activa' ? { ...live, measured: live.consistent } : p.evaluation;
 
   return (
     <div className="grid gap-5">
@@ -31,12 +37,13 @@ export function GovernanceView() {
         title={t('gov.title')}
         lede={t('gov.lede')}
         aside={
-          <button type="button" className={paused ? 'btn' : 'btn btn-decision'} onClick={() => server.setPaused(ctx, !paused)} data-testid="pause">
+          <button type="button" className={paused ? 'btn' : 'btn btn-decision'} onClick={() => run(() => server.setPaused(ctx, !paused))} data-testid="pause">
             {paused ? t('gov.resume') : t('gov.pause')}
           </button>
         }
       />
 
+      <ErrorNote message={error} />
       <section className="sheet" aria-labelledby="gov-agents">
         <header className="sheet-head"><h2 id="gov-agents" className="text-lg">{t('gov.agents')}</h2></header>
         <div className="table-scroll">
@@ -54,18 +61,27 @@ export function GovernanceView() {
             <span className="label">{t('gov.gate')}: ≥{POLICY_PROMOTION_GATE.minFieldAccuracy} · {POLICY_PROMOTION_GATE.plantedRequired}/3 · FP {POLICY_PROMOTION_GATE.maxFalsePositives} · ×{POLICY_PROMOTION_GATE.repetitions}</span>
           </header>
           <ul className="grid" data-testid="policies">
-            {server.listPolicies(ctx).map((p) => (
+            {server.listPolicies(ctx).map((p) => {
+              const e = evaluationOf(p);
+              return (
               <li key={p.id} className={`grid gap-2 border-b border-rule p-4 ${p.status === 'sandbox' ? 'sim-surface' : ''}`}>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="mono">{p.agent} · {p.version}</span>
                   {p.status === 'sandbox' ? <Stamp tone="sim">{t('gov.sandbox')}</Stamp> : <Stamp tone="ok">{t('gov.active')}</Stamp>}
-                  {p.evaluation ? (passesGate(p) ? <Stamp tone="ok">{t('gov.gatePass')}</Stamp> : <Stamp tone="wait">{t('gov.gateFail')}</Stamp>) : null}
+                  {e?.measured ? (passesGate(e) ? <Stamp tone="ok">{t('gov.gatePass')}</Stamp> : <Stamp tone="wait">{t('gov.gateFail')}</Stamp>) : null}
+                  {e && !e.measured ? <Stamp tone="sim">{t('gov.illustrative')}</Stamp> : null}
                 </div>
                 <p className="note">{p.scope}</p>
-                {p.evaluation ? <p className="mono text-xs text-ink-2">acc {p.evaluation.fieldAccuracy} · plantadas {p.evaluation.plantedFound}/3 · FP {p.evaluation.falsePositives} · ×{p.evaluation.repetitions}</p> : null}
-                <p className="mono text-xs text-ink-3">propuesta por {p.proposedBy} · aprobada por {p.approvedBy ?? '—'}</p>
+                {e ? (
+                  <p className="mono text-xs text-ink-2">
+                    acc {e.fieldAccuracy} · {t('gov.planted')} {e.plantedFound}/3 · FP {e.falsePositives} · ×{e.repetitions}
+                    {e.measured ? ` · ${t('gov.measuredNow')}` : ''}
+                  </p>
+                ) : null}
+                <p className="mono text-xs text-ink-3">{t('gov.proposedBy')} {p.proposedBy} · {t('gov.approvedBy')} {p.approvedBy ?? '—'}</p>
               </li>
-            ))}
+              );
+            })}
           </ul>
         </section>
 
@@ -85,7 +101,7 @@ export function GovernanceView() {
           <div className="flex flex-wrap items-center gap-2">
             {chainOk ? <Stamp tone="ok">{t('gov.chain')}</Stamp> : <Stamp tone="decision">{t('gov.chainBroken')}</Stamp>}
             <select className="input w-auto" value={actorFilter} onChange={(e) => setActorFilter(e.target.value as AuditEntry['actorType'] | '')} aria-label={t('gov.actor')}>
-              <option value="">todos</option><option value="persona">persona</option><option value="agente">agente</option><option value="sistema">sistema</option>
+              <option value="">{t('common.all')}</option><option value="persona">persona</option><option value="agente">agente</option><option value="sistema">sistema</option>
             </select>
           </div>
         </header>
@@ -93,7 +109,7 @@ export function GovernanceView() {
           <table className="ledger" data-testid="audit-log">
             <thead><tr><th>#</th><th>{t('gov.when')}</th><th>{t('gov.actor')}</th><th>{t('gov.action')}</th><th>{t('gov.entity')}</th><th>{t('gov.hash')}</th></tr></thead>
             <tbody>
-              {[...audit].reverse().map((e) => (
+              {[...audit].reverse().slice(0, 300).map((e) => (
                 <tr key={e.id}>
                   <td className="mono text-xs">{e.seq}</td>
                   <td className="mono text-xs">{e.at.slice(11, 19)}</td>

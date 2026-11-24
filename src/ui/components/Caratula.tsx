@@ -20,8 +20,10 @@ export function Caratula({ shipment }: { shipment: Shipment }) {
     <section className="sheet" aria-labelledby="file-title">
       <div className="grid gap-4 p-4 md:grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)] md:gap-6 md:p-5">
         <div className="grid content-start gap-3">
-          <span className="label">{t('file.folio')}</span>
-          <h1 id="file-title" className="folio" data-testid="file-folio">{shipment.id}</h1>
+          <h1 id="file-title" className="grid gap-1">
+            <span className="label">{t('nav.file')} · {t('file.folio')}</span>
+            <span className="folio" data-testid="file-folio">{shipment.id}</span>
+          </h1>
           <div className="flex flex-wrap gap-2">
             <Stamp tone={STATUS_TONE[shipment.status]} enter>{t(`status.${shipment.status}`)}</Stamp>
             <span className="stamp stamp-neutral">MX ← CN</span>

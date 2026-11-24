@@ -27,7 +27,7 @@ export function ReconciliationView() {
         <section className="sheet">
           <div className="table-scroll">
             <table className="ledger" data-testid="reconciliation">
-              <thead><tr><th>Registro</th><th className="num-col">USD</th><th className="num-col">{t('file.quantity')}</th></tr></thead>
+              <thead><tr><th>{t('rec.record')}</th><th className="num-col">USD</th><th className="num-col">{t('file.quantity')}</th></tr></thead>
               <tbody>
                 {rows.map((r) => (
                   <tr key={r.label}><td>{r.label}</td><td className="num-col">{r.value}</td><td className="num-col figure">{r.qty ?? '—'}</td></tr>

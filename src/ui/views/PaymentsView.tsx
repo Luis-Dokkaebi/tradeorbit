@@ -17,7 +17,7 @@ export function ProposalCard({ p, children }: { p: PaymentProposal; children?: R
       <header className="flex flex-wrap items-start justify-between gap-2">
         <div className="grid gap-1">
           <span className="label">{p.id} · {p.corridor} · v{p.version}</span>
-          <h3 className="text-lg">{p.routeLabel}</h3>
+          <h2 className="text-lg">{p.routeLabel}</h2>
         </div>
         <div className="flex flex-wrap gap-2"><Stamp tone={tone} enter>{t(`proposal.${p.status}` as MessageKey)}</Stamp><DemoTag /></div>
       </header>
@@ -28,8 +28,8 @@ export function ProposalCard({ p, children }: { p: PaymentProposal; children?: R
       <table className="ledger">
         <caption className="label py-1 text-left">{t('pay.fees')}</caption>
         <tbody>
-          {p.fees.map((f) => (
-            <tr key={f.label}><td><div className="grid"><span>{f.label}</span><span className="mono text-xs text-ink-3">{f.basis}</span></div></td><td className="num-col">−<Amount value={f.amount} currency={f.currency} /></td></tr>
+          {p.fees.map((f, i) => (
+            <tr key={`${i}-${f.label}`}><td><div className="grid"><span>{f.label}</span><span className="mono text-xs text-ink-3">{f.basis}</span></div></td><td className="num-col">−<Amount value={f.amount} currency={f.currency} /></td></tr>
           ))}
         </tbody>
       </table>

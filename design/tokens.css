@@ -10,13 +10,15 @@
   --color-paper-3: oklch(94.2% 0.012 85);
   --color-ink: oklch(24% 0.03 258);
   --color-ink-2: oklch(42% 0.022 258);
-  --color-ink-3: oklch(52% 0.016 258);
+  --color-ink-3: oklch(49% 0.016 258);
   --color-rule: oklch(86.5% 0.012 85);
   --color-rule-strong: oklch(74% 0.014 85);
   --color-on-ink: oklch(97.4% 0.008 85);
+  /* Form control borders: ≥3:1 against paper (WCAG 1.4.11). */
+  --color-control-border: oklch(60% 0.014 85);
 
   /* Meaning-bearing colours */
-  --color-decision: oklch(52% 0.19 32);
+  --color-decision: oklch(50% 0.18 32);
   --color-decision-soft: oklch(94% 0.035 32);
   --color-sim: oklch(45% 0.15 268);
   --color-sim-soft: oklch(94.5% 0.025 268);

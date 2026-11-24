@@ -1,6 +1,7 @@
 import { askShipment } from '../domain/ask';
 import { buildCustomsChecklist, CUSTOMS_DISCLAIMER, type ChecklistItem } from '../domain/customsPackage';
-import { detectDiscrepancies } from '../domain/discrepancies';
+import { detectDiscrepancies, normalizeSupplier } from '../domain/discrepancies';
+import { evaluateActivePolicy } from '../domain/policyEval';
 import { extractFields } from '../domain/extraction';
 import { computeLandedCost, findTariffRule } from '../domain/landedCost';
 import { buildTimeline, isDelayed, isDelivered, type TimelineStep } from '../domain/logistics';
@@ -9,7 +10,11 @@ import { reconcile } from '../domain/reconciliation';
 import { toIsoDate } from '../shared/dates';
 import {
   DecisionInput,
+  LandedCostRequest,
+  PositiveDecimal,
   ProposalRequest,
+  ShipmentForm,
+  UploadedFile,
   type AgentName,
   type AgentRun,
   type Approval,
@@ -24,7 +29,8 @@ import {
   type ScenarioName,
   type Shipment,
   type ShipmentEvent,
-  type ShipmentEventType,
+  IsoDate,
+  ShipmentEventType,
   type Supplier,
   type TradeDocument,
 } from '../shared/schemas';
@@ -53,14 +59,6 @@ export interface CustomsPackage {
   padronConfirmed: boolean;
 }
 
-export interface ShipmentForm {
-  supplier: string;
-  goods: string;
-  quantity: number;
-  amount: string;
-  eta: string;
-  incoterm: string;
-}
 
 /**
  * Server functions of the MVP (SDD § Funciones de servidor), running in-process for the demo.
@@ -74,6 +72,7 @@ export class KiilonovaServer {
   private readonly listeners = new Set<Listener>();
   private version = 0;
   private seq = 0;
+  private epoch = 0;
   private readonly clock: () => Date;
   private readonly replayCache = new Map<string, string>();
 
@@ -93,6 +92,9 @@ export class KiilonovaServer {
   };
 
   getVersion = (): number => this.version;
+
+  /** Bumped on every scenario load or reset so the UI can drop view-local state. */
+  getEpoch = (): number => this.epoch;
 
   private emit(): void {
     this.version += 1;
@@ -134,13 +136,17 @@ export class KiilonovaServer {
       throw new AgentPausedError();
     }
     const started = Date.now();
-    const out = step();
-    const cacheKey = `${agent}:${inputText}`;
-    const replayed = this.flags.replay && this.replayCache.has(cacheKey);
-    if (!this.flags.replay) this.replayCache.set(cacheKey, JSON.stringify(out));
+    const cacheKey = `${ctx.orgId}:${agent}:${inputText}`;
+    const cached = this.flags.replay ? this.replayCache.get(cacheKey) : undefined;
+    // Replay serves the saved output of an earlier run; anything not saved runs live and is marked so.
+    const out = cached !== undefined ? (JSON.parse(cached) as T) : step();
+    const output = cached ?? JSON.stringify(out);
+    if (cached === undefined) {
+      if (this.replayCache.size >= 500) this.replayCache.delete(this.replayCache.keys().next().value ?? '');
+      this.replayCache.set(cacheKey, output);
+    }
     const reason = hold ? hold(out) : null;
-    const output = replayed ? (this.replayCache.get(cacheKey) ?? '') : JSON.stringify(out);
-    this.recordRun(ctx, agent, inputText, output, Date.now() - started, reason ? 'hold' : 'ok', reason, replayed);
+    this.recordRun(ctx, agent, inputText, output, Date.now() - started, reason ? 'hold' : 'ok', reason, cached !== undefined);
     return out;
   }
 
@@ -207,19 +213,35 @@ export class KiilonovaServer {
     return this.scoped(ctx, 'policies');
   }
 
+  /** Runs the promotion gate on the seed set now (measured, not illustrative). */
+  evaluateActiveExtractionPolicy(): ReturnType<typeof evaluateActivePolicy> {
+    return evaluateActivePolicy(this.today());
+  }
+
+  private assertNotPaused(ctx: Ctx, agent: AgentName): void {
+    if (!this.flags.paused) return;
+    this.recordRun(ctx, agent, '{}', '', 0, 'hold', 'Interruptor de pausa activo', false);
+    this.emit();
+    throw new AgentPausedError();
+  }
+
   getAuditLog(ctx: Ctx, filter: { actorType?: AuditEntry['actorType']; entity?: string } = {}): readonly AuditEntry[] {
     return this.audit
       .list(ctx.orgId)
       .filter((e) => (!filter.actorType || e.actorType === filter.actorType) && (!filter.entity || e.entity === filter.entity));
   }
 
-  /** Exposed so tests can prove that editing the log fails (NFR-06). */
-  get auditLog(): AuditLog {
-    return this.audit;
+  /** Recomputes the organization's hash chain; null means intact. */
+  verifyAuditChain(ctx: Ctx): number | null {
+    return this.audit.verifyChain(ctx.orgId);
   }
 
   getFlags(): Readonly<Flags> {
     return this.flags;
+  }
+
+  tariffConfirmation(ctx: Ctx, shipmentId: string): { hsCode: string; by: string } | undefined {
+    return this.flags.tariffConfirmedBy[`${ctx.orgId}:${shipmentId}`];
   }
 
   seedLibrary(ctx: Ctx): SeedLibraryItem[] {
@@ -229,11 +251,20 @@ export class KiilonovaServer {
 
   // ── POST /demo/scenarios/{name}/load · /demo/reset (US-12) ───────────────
   loadScenario(ctx: Ctx, name: ScenarioName): void {
-    this.audit = new AuditLog(this.clock);
+    this.epoch += 1;
     this.flags = { ...this.flags, scenario: name, paused: false, tariffConfirmedBy: {}, padronConfirmed: {} };
     const seed = seedScenario(name, this.today(), ctx.orgId);
-    this.t = { ...emptyTables(), ...seed.tables, tariff_rules: [...TARIFF_RULES] };
-    this.seq = seed.nextSeq;
+    const others = emptyTables();
+    for (const key of Object.keys(others) as (keyof Tables)[]) {
+      if (key === 'tariff_rules') continue;
+      (others[key] as { orgId: string }[]) = (this.t[key] as { orgId: string }[]).filter((r) => r.orgId !== ctx.orgId);
+    }
+    const merged = emptyTables();
+    for (const key of Object.keys(merged) as (keyof Tables)[]) {
+      (merged[key] as unknown[]) = [...(others[key] as unknown[]), ...(seed.tables[key] as unknown[])];
+    }
+    this.t = { ...merged, tariff_rules: [...TARIFF_RULES] };
+    this.seq = Math.max(this.seq, seed.nextSeq);
     this.log(ctx, 'sistema', 'demo.escenario_cargado', 'demo', name, { scenario: name });
     for (const shipment of this.t.shipments) this.recompute(ctx, shipment.id);
     this.emit();
@@ -256,7 +287,8 @@ export class KiilonovaServer {
     return this.createShipmentFromText(ctx, item.id, item.fileName, item.pages);
   }
 
-  createShipmentFromForm(ctx: Ctx, form: ShipmentForm): Shipment {
+  createShipmentFromForm(ctx: Ctx, input: ShipmentForm): Shipment {
+    const form = ShipmentForm.parse(input);
     const [y, m, d] = form.eta.split('-');
     const lines = [
       'ORDEN DE COMPRA (formulario)',
@@ -269,26 +301,40 @@ export class KiilonovaServer {
       `Incoterm: ${form.incoterm}`,
       `Fecha estimada de arribo: ${d}/${m}/${y}`,
     ];
-    return this.createShipmentFromText(ctx, this.nextId('FORM'), 'formulario-orden-de-compra', [lines]);
+    return this.createShipmentFromText(ctx, this.nextId('FORM'), 'captura-manual-orden-de-compra', [lines], true);
   }
 
-  private createShipmentFromText(ctx: Ctx, docId: string, fileName: string, pages: string[][]): Shipment {
+  /** Finds the supplier by normalized name, or registers it with KYB pending (DEMO). */
+  private supplierFor(ctx: Ctx, name: string) {
+    const existing = this.scoped(ctx, 'suppliers').find((s) => normalizeSupplier(s.name) === normalizeSupplier(name));
+    if (existing) return existing;
+    const supplier = { id: this.nextId('SUP'), orgId: ctx.orgId, name, country: 'CN', kybStatus: 'demo_pendiente' as const, demo: true as const };
+    this.write('documental', 'suppliers', [...this.t.suppliers, supplier]);
+    this.log(ctx, 'agente', 'proveedor.registrado', 'suppliers', supplier.id, { agent: 'documental', kyb: 'demo_pendiente' });
+    return supplier;
+  }
+
+  private createShipmentFromText(ctx: Ctx, docId: string, fileName: string, pages: string[][], manual = false): Shipment {
+    this.assertNotPaused(ctx, 'documental');
     const extraction = this.runAgent(ctx, 'documental', { docId, type: 'orden_compra' }, () => extractFields(docId, 'orden_compra', pages), (out) => {
       const low = out.fields.filter((f) => f.needsReview).map((f) => f.key);
       return low.length > 0 ? `Campos con confianza menor a 0.80: ${low.join(', ')}` : null;
     });
-    const get = (k: string): string | undefined => extraction.fields.find((f) => f.key === k)?.value;
-    const supplier = this.scoped(ctx, 'suppliers')[0];
-    if (!supplier) throw new NotFoundError('Proveedor', 'semilla');
+    // Typed data is not extracted data: manual capture carries full confidence and says so.
+    const fields = manual ? extraction.fields.map((f) => ({ ...f, confidence: 1, needsReview: false })) : extraction.fields;
+    const get = (k: string): string | undefined => fields.find((f) => f.key === k)?.value;
+    const missing = ['proveedor', 'cantidad', 'importe'].filter((k) => get(k) === undefined || fields.find((f) => f.key === k)?.needsReview === true && k !== 'proveedor');
+    if (missing.length > 0) throw new Error(`La orden de compra no trae ${missing.join(', ')} legible: pasa a revisión manual`);
+    const supplier = this.supplierFor(ctx, get('proveedor') ?? '');
     const shipmentId = `SHP-${String(this.scoped(ctx, 'shipments').length + 1).padStart(4, '0')}`;
     const shipment: Shipment = {
       id: shipmentId, orgId: ctx.orgId, supplierId: supplier.id, status: 'abierto',
       goods: get('mercancia') ?? 'Sin dato', hsCode: null, quantity: Number(get('cantidad') ?? '1') || 1, unit: 'piezas',
       amount: get('importe') ?? '0', currency: 'USD', eta: get('fecha_estimada') ?? this.today(), incoterm: get('incoterm') ?? 'Sin dato',
-      scenario: this.flags.scenario, fields: extraction.fields, createdAt: this.now(),
+      scenario: this.flags.scenario, fields, createdAt: this.now(),
     };
     const po: TradeDocument = {
-      id: docId, orgId: ctx.orgId, shipmentId, type: 'orden_compra', fileName, status: extraction.status, fields: extraction.fields, uploadedAt: this.now(),
+      id: docId, orgId: ctx.orgId, shipmentId, type: 'orden_compra', fileName, status: extraction.status, fields, uploadedAt: this.now(),
     };
     this.write('documental', 'shipments', [...this.t.shipments, shipment]);
     this.write('documental', 'documents', [...this.t.documents, po]);
@@ -310,9 +356,13 @@ export class KiilonovaServer {
     return this.addDocument(ctx, shipmentId, { id: item.id, type: item.type, fileName: item.fileName, pages: item.pages });
   }
 
-  addDocument(ctx: Ctx, shipmentId: string, file: { id?: string; type: DocumentType; fileName: string; pages: string[][] }): TradeDocument {
+  addDocument(ctx: Ctx, shipmentId: string, input: { id?: string; type: DocumentType; fileName: string; pages: string[][] }): TradeDocument {
+    const file = UploadedFile.parse(input);
     this.getShipment(ctx, shipmentId);
+    this.assertNotPaused(ctx, 'documental');
     const docId = file.id ?? this.nextId('DOC');
+    const clash = this.scoped(ctx, 'documents').find((d) => d.id === docId && d.shipmentId !== shipmentId);
+    if (clash) throw new Error(`El documento ${docId} ya pertenece a otro expediente`);
     const extraction = this.runAgent(ctx, 'documental', { docId, type: file.type }, () => extractFields(docId, file.type, file.pages), (out) => {
       if (out.status === 'revision_manual') return 'Documento ilegible: pasa a revisión manual';
       return out.fields.some((f) => f.needsReview) ? 'Campos de baja confianza' : null;
@@ -320,7 +370,7 @@ export class KiilonovaServer {
     const doc: TradeDocument = {
       id: docId, orgId: ctx.orgId, shipmentId, type: file.type, fileName: file.fileName, status: extraction.status, fields: extraction.fields, uploadedAt: this.now(),
     };
-    this.write('documental', 'documents', [...this.t.documents.filter((d) => d.id !== docId), doc]);
+    this.write('documental', 'documents', [...this.t.documents.filter((d) => !(d.id === docId && d.orgId === ctx.orgId)), doc]);
     this.log(ctx, 'persona', 'documento.subido', 'documents', docId, { type: file.type, status: doc.status });
     this.recompute(ctx, shipmentId);
     this.emit();
@@ -351,6 +401,7 @@ export class KiilonovaServer {
     const d = this.scoped(ctx, 'discrepancies').find((r) => r.id === id);
     if (!d) throw new NotFoundError('Discrepancia', id);
     if (note.trim().length < 5) throw new Error('Explica cómo se resolvió (mínimo 5 caracteres)');
+    this.assertNotPaused(ctx, 'documental');
     this.write('persona', 'discrepancies', this.t.discrepancies.map((r) => (r.id === id ? { ...r, status: 'resuelta' as const } : r)));
     this.log(ctx, 'persona', 'discrepancia.resuelta', 'discrepancies', id, { note });
     this.recompute(ctx, d.shipmentId);
@@ -358,7 +409,8 @@ export class KiilonovaServer {
   }
 
   // ── POST /shipments/{id}/landed-cost (US-04) ─────────────────────────────
-  computeLandedCost(ctx: Ctx, shipmentId: string, input: { hsCode: string; freightUsd: string; brokerFeesMxn: string; fxRate?: string }): LandedCostResult {
+  computeLandedCost(ctx: Ctx, shipmentId: string, raw: LandedCostRequest): LandedCostResult {
+    const input = LandedCostRequest.parse(raw);
     const shipment = this.getShipment(ctx, shipmentId);
     const result = this.runAgent(ctx, 'aranceles_costo', { shipmentId, ...input }, (): LandedCostResult => {
       const rule = findTariffRule(this.t.tariff_rules, input.hsCode, this.today());
@@ -391,15 +443,16 @@ export class KiilonovaServer {
 
   confirmTariff(ctx: Ctx, shipmentId: string, hsCode: string): void {
     this.getShipment(ctx, shipmentId);
-    this.flags = { ...this.flags, tariffConfirmedBy: { ...this.flags.tariffConfirmedBy, [shipmentId]: ctx.actor } };
+    this.flags = { ...this.flags, tariffConfirmedBy: { ...this.flags.tariffConfirmedBy, [`${ctx.orgId}:${shipmentId}`]: { hsCode, by: ctx.actor } } };
     this.write('persona', 'shipments', this.t.shipments.map((s) => (s.id === shipmentId && s.orgId === ctx.orgId ? { ...s, hsCode } : s)));
     this.log(ctx, 'persona', 'fraccion.confirmada', 'shipments', shipmentId, { hsCode });
     this.emit();
   }
 
   // ── POST /shipments/{id}/payment-proposals (US-05) ───────────────────────
-  createPaymentProposals(ctx: Ctx, request: ProposalRequest, fxRate: string = DEMO_FX_RATE): PaymentProposal[] {
+  createPaymentProposals(ctx: Ctx, request: ProposalRequest, rawFxRate: string = DEMO_FX_RATE): PaymentProposal[] {
     const req = ProposalRequest.parse(request);
+    const fxRate = PositiveDecimal.parse(rawFxRate);
     this.getShipment(ctx, req.shipment_id);
     const quotes = this.runAgent(ctx, 'financiero', req, () => quoteAllRoutes(req.send.amount, fxRate));
     const proposals = quotes.map((q): PaymentProposal => ({
@@ -427,11 +480,16 @@ export class KiilonovaServer {
 
   // ── POST /payment-proposals/{id}/decision (US-06) ────────────────────────
   decide(ctx: Ctx, input: DecisionInput): Approval {
-    const d = DecisionInput.parse(input);
+    // The approver is the authenticated person of the session, never a value chosen by the caller.
+    const d = DecisionInput.parse({ ...input, approver: ctx.actor });
     const p = this.listProposals(ctx).find((r) => r.id === d.proposalId);
     if (!p) throw new NotFoundError('Propuesta', d.proposalId);
     if (p.status !== 'en_aprobacion') throw new Error('Solo se decide sobre propuestas en la bandeja de aprobación');
     if (p.version !== d.version) throw new StaleVersionError(p.version, d.version);
+    const highOpen = this.listDiscrepancies(ctx, p.shipment_id).filter((x) => x.status === 'abierta' && x.severity === 'alta');
+    if (d.decision === 'aprobada' && highOpen.length > 0 && (d.reason ?? '').length < 5) {
+      throw new Error(`Hay ${highOpen.length} discrepancia(s) de severidad alta abiertas: para autorizar escribe el motivo por el que aceptas el riesgo`);
+    }
     const approval: Approval = {
       id: this.nextId('APR'), orgId: ctx.orgId, proposalId: p.id, approver: d.approver, decision: d.decision,
       reason: d.reason && d.reason.length > 0 ? d.reason : null, version: d.version, decidedAt: this.now(),
@@ -456,8 +514,11 @@ export class KiilonovaServer {
     return buildTimeline(this.listEvents(ctx, shipmentId), this.today());
   }
 
-  addManualEvent(ctx: Ctx, shipmentId: string, type: ShipmentEventType, date: string): void {
+  addManualEvent(ctx: Ctx, shipmentId: string, rawType: ShipmentEventType, rawDate: string): void {
+    const type = ShipmentEventType.parse(rawType);
+    const date = IsoDate.parse(rawDate);
     this.getShipment(ctx, shipmentId);
+    this.assertNotPaused(ctx, 'logistico');
     const event: ShipmentEvent = { id: this.nextId('EVT'), orgId: ctx.orgId, shipmentId, type, date, estimated: false, origin: 'manual' };
     this.write('persona', 'shipment_events', [...this.t.shipment_events, event]);
     this.log(ctx, 'persona', 'evento.capturado', 'shipment_events', event.id, { type, date });
@@ -471,8 +532,9 @@ export class KiilonovaServer {
     const shipment = this.getShipment(ctx, shipmentId);
     const docs = this.listDocuments(ctx, shipmentId);
     const timeline = this.getTimeline(ctx, shipmentId);
-    const outcome = this.runAgent(ctx, 'conciliacion', { shipmentId, docs: docs.map((d) => d.id) }, () =>
-      reconcile({ orderedAmount: shipment.amount, orderedQty: shipment.quantity, documents: docs, delivered: isDelivered(timeline) }));
+    const open = this.listDiscrepancies(ctx, shipmentId).filter((d) => d.status === 'abierta').length;
+    const outcome = this.runAgent(ctx, 'conciliacion', { shipmentId, docs: docs.map((d) => d.id), open }, () =>
+      reconcile({ orderedAmount: shipment.amount, orderedQty: shipment.quantity, documents: docs, delivered: isDelivered(timeline), openDiscrepancies: open }));
     const existing = this.scoped(ctx, 'reconciliations').find((r) => r.shipmentId === shipmentId);
     const rec: Reconciliation = { id: existing?.id ?? `REC-${shipmentId.slice(4)}`, orgId: ctx.orgId, shipmentId, ...outcome };
     this.write('conciliacion', 'reconciliations', [...this.t.reconciliations.filter((r) => !(r.id === rec.id && r.orgId === ctx.orgId)), rec]);
@@ -496,13 +558,13 @@ export class KiilonovaServer {
     const docs = this.listDocuments(ctx, shipmentId);
     return {
       shipmentId, checklist: buildCustomsChecklist(docs, 'textil'), disclaimer: CUSTOMS_DISCLAIMER,
-      padronConfirmed: this.flags.padronConfirmed[shipmentId] ?? false,
+      padronConfirmed: this.flags.padronConfirmed[`${ctx.orgId}:${shipmentId}`] ?? false,
     };
   }
 
   confirmPadron(ctx: Ctx, shipmentId: string, confirmed: boolean): void {
     this.getShipment(ctx, shipmentId);
-    this.flags = { ...this.flags, padronConfirmed: { ...this.flags.padronConfirmed, [shipmentId]: confirmed } };
+    this.flags = { ...this.flags, padronConfirmed: { ...this.flags.padronConfirmed, [`${ctx.orgId}:${shipmentId}`]: confirmed } };
     this.log(ctx, 'persona', confirmed ? 'padron.confirmado' : 'padron.desmarcado', 'shipments', shipmentId, { confirmed });
     this.emit();
   }

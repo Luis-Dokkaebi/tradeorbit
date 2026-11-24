@@ -22,6 +22,8 @@ test('guion de demo completo: expediente, discrepancias, costo, propuesta, aprob
   await page.getByTestId('calc-cost').click();
   await expect(page.getByTestId('cost-total')).toContainText('174,118.27');
   await expect(page.getByText('NOM-004-SE-2021')).toBeVisible();
+  await expect(page.getByText('35%', { exact: true })).toBeVisible();
+  await expect(page.getByText(/Decreto DOF 19\/12\/2024/).first()).toBeVisible();
   await expect(page.getByText('Por verificar contra el DOF')).toBeVisible();
   await page.getByTestId('hs-input').fill('8517.13.01');
   await page.getByTestId('calc-cost').click();
@@ -32,6 +34,7 @@ test('guion de demo completo: expediente, discrepancias, costo, propuesta, aprob
   await page.getByTestId('pay-generate').click();
   await expect(page.getByTestId('proposal-banco')).toContainText('5,479.45');
   await expect(page.getByTestId('proposal-riel_stablecoin')).toContainText('DEMO');
+  await expect(page.getByTestId('proposal-banco')).toContainText('DEMO');
   await expect(page.getByRole('button', { name: /^Pagar/ })).toHaveCount(0);
   await page.getByTestId('submit-banco').click();
   await page.getByTestId('submit-riel_stablecoin').click();
@@ -42,8 +45,14 @@ test('guion de demo completo: expediente, discrepancias, costo, propuesta, aprob
   await expect(page.getByRole('alert')).toContainText('motivo');
   await page.getByTestId('reason-riel_stablecoin').fill('Falta validación legal del riel en Hong Kong');
   await page.getByTestId('reject-riel_stablecoin').click();
+  // 3 high-severity discrepancies are open: authorizing requires a reason for accepting the risk
+  await expect(page.getByTestId('risk-banco')).toBeVisible();
+  await page.getByTestId('approve-banco').click();
+  await expect(page.getByRole('alert')).toContainText('severidad alta');
+  await page.getByTestId('reason-banco').fill('Anticipo pactado; la factura corregida llega antes del saldo');
   await page.getByTestId('approve-banco').click();
   await expect(page.getByTestId('approvals-history')).toContainText('Autorizada (simulada)');
+  await expect(page.getByTestId('approvals-history')).toContainText('v1');
   await expect(page.getByTestId('no-money')).toHaveText('No se movió dinero.');
 
   // US-09 / US-10 — reconciliation and question with citation
@@ -58,6 +67,8 @@ test('guion de demo completo: expediente, discrepancias, costo, propuesta, aprob
   // US-11 — governance: sandbox policy, audit log
   await page.getByTestId('nav-gobernanza').click();
   await expect(page.getByTestId('policies')).toContainText('Sandbox, sin despliegue');
+  await expect(page.getByTestId('policies')).toContainText('DEMO · ilustrativo, no medido');
+  await expect(page.getByTestId('policies')).toContainText('medido ahora');
   await expect(page.getByTestId('audit-log')).toContainText('propuesta.autorizada_simulada');
   await expect(page.getByRole('button', { name: /desplegar|deploy|promover/i })).toHaveCount(0);
 });

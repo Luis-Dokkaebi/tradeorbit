@@ -57,6 +57,6 @@ export interface Flags {
   scenario: ScenarioName;
   paused: boolean;
   replay: boolean;
-  tariffConfirmedBy: Record<string, string>;
+  tariffConfirmedBy: Record<string, { hsCode: string; by: string }>;
   padronConfirmed: Record<string, boolean>;
 }
