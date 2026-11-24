@@ -2,7 +2,7 @@ import { KiilonovaServer, DEMO_ORG } from '../server/server';
 import type { ScenarioName } from '../shared/schemas';
 
 export const FIXED_NOW = new Date('2026-11-24T15:00:00.000Z');
-export const ctx = { orgId: DEMO_ORG, actor: 'Dirección general (aprobador de referencia, DEMO)' };
+export const ctx = { orgId: DEMO_ORG, actor: 'Dirección general' };
 export const otherOrg = { orgId: 'org-ajena', actor: 'intruso' };
 
 export const makeServer = (scenario: ScenarioName = 'discrepancia'): KiilonovaServer =>

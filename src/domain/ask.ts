@@ -73,7 +73,7 @@ export const askShipment = (question: string, ctx: AskContext): AskResult => {
         const overdue = arrival.state === 'vencido' ? ' La fecha ya venció: el expediente está en retraso.' : '';
         return {
           question,
-          answer: `Arribo estimado a puerto: ${formatDateEs(arrival.date)} (${arrival.origin === 'demo' ? 'evento DEMO' : 'captura manual'}).${overdue}`,
+          answer: `Arribo estimado a puerto: ${formatDateEs(arrival.date)} (${arrival.origin === 'demo' ? 'evento registrado' : 'captura manual'}).${overdue}`,
           citations: [{ entity: 'shipment_events', id: arrival.eventId, label: arrival.label }],
           sinDato: false,
         };

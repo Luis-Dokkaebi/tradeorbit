@@ -2,6 +2,12 @@
 
 Bitácora de sesiones para la siguiente sesión. La más reciente arriba.
 
+## Sesión 2 · 2026-11-24
+
+- `vercel.json` (Vite estático, cabeceras de seguridad, `noindex`) y Node 22. Build verificado en clon limpio.
+- Por decisión del dueño, la vista pública ya no muestra la etiqueta DEMO; los controles del presentador solo aparecen con `?presentador`. Ver `specs/proposals/2026-11-24-ocultar-demo.md`.
+- US-12.c queda en `passes: false` hasta que el dueño enmiende el principio 4 y el criterio (archivos protegidos).
+
 ## Sesión 1 · 2026-11-24
 
 **Hecho**

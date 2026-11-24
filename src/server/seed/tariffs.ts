@@ -12,7 +12,7 @@ export const TARIFF_RULES: readonly TariffRule[] = [
     description: 'Camisas de algodón para hombres o niños (tejido plano)',
     rate: '0.35',
     noms: [{ code: 'NOM-004-SE-2021', title: 'Información comercial — etiquetado de productos textiles, prendas de vestir y sus accesorios' }],
-    source: 'TIGIE — Decreto DOF 19/12/2024 (confección, países sin tratado comercial). Fila DEMO: verificar fracción, NICO y tasa contra el DOF vigente.',
+    source: 'TIGIE — Decreto DOF 19/12/2024 (confección, países sin tratado comercial). Pendiente de verificar fracción, NICO y tasa contra el DOF vigente.',
     publishedAt: '2024-12-19',
     validFrom: '2024-12-20',
     validTo: null,
@@ -22,5 +22,5 @@ export const TARIFF_RULES: readonly TariffRule[] = [
 ];
 
 /** Fixed-rate contributions with their legal source. */
-export const DTA_RATE = { rate: '0.008', source: 'Ley Federal de Derechos, art. 49 fr. I — 8 al millar sobre el valor en aduana · v1 · vigencia por confirmar contra la LFD 2026 (DEMO)' } as const;
+export const DTA_RATE = { rate: '0.008', source: 'Ley Federal de Derechos, art. 49 fr. I — 8 al millar sobre el valor en aduana · v1 · vigencia por confirmar contra la LFD 2026' } as const;
 export const IVA_RATE = { rate: '0.16', source: 'Ley del IVA, arts. 1 y 27 — base: valor en aduana + IGI + DTA · v1 · tasa general vigente desde 2010' } as const;

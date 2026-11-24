@@ -46,10 +46,10 @@ export const allSeedDocuments = (today: string): SeedDocument[] =>
   (['limpio', 'discrepancia', 'retraso'] as const).flatMap((s) => [purchaseOrderFor(s, today), ...supportingDocumentsFor(s, today)]);
 
 const POLICIES = (orgId: string): Policy[] => [
-  { id: 'POL-001', orgId, agent: 'documental', version: 'v1.2', scope: 'Extracción y cruce de documentos', status: 'activa', proposedBy: 'equipo', approvedBy: 'Responsable de gobernanza (DEMO)', evaluation: null },
+  { id: 'POL-001', orgId, agent: 'documental', version: 'v1.2', scope: 'Extracción y cruce de documentos', status: 'activa', proposedBy: 'equipo', approvedBy: 'Responsable de gobernanza', evaluation: null },
   { id: 'POL-002', orgId, agent: 'documental', version: 'v1.3-sandbox', scope: 'Normalización agresiva de nombres de proveedor', status: 'sandbox', proposedBy: 'proponente_politicas', approvedBy: null, evaluation: { fieldAccuracy: '0.97', plantedFound: 2, falsePositives: 1, repetitions: 5, measured: false } },
-  { id: 'POL-003', orgId, agent: 'financiero', version: 'v1.0', scope: 'Rutas de pago en modo solo proponer', status: 'activa', proposedBy: 'equipo', approvedBy: 'Responsable de gobernanza (DEMO)', evaluation: null },
-  { id: 'POL-004', orgId, agent: 'aranceles_costo', version: 'v1.0', scope: 'Costo puesto con tabla versionada', status: 'activa', proposedBy: 'equipo', approvedBy: 'Responsable de gobernanza (DEMO)', evaluation: null },
+  { id: 'POL-003', orgId, agent: 'financiero', version: 'v1.0', scope: 'Rutas de pago en modo solo proponer', status: 'activa', proposedBy: 'equipo', approvedBy: 'Responsable de gobernanza', evaluation: null },
+  { id: 'POL-004', orgId, agent: 'aranceles_costo', version: 'v1.0', scope: 'Costo puesto con tabla versionada', status: 'activa', proposedBy: 'equipo', approvedBy: 'Responsable de gobernanza', evaluation: null },
 ];
 
 const preloadedEvents = (scenario: ScenarioName, today: string, orgId: string, shipmentId: string, next: () => string): ShipmentEvent[] => {
@@ -73,7 +73,7 @@ export const seedScenario = (scenario: ScenarioName, today: string, orgId: strin
   const at = `${today}T09:00:00.000Z`;
   const tables: Tables = {
     ...emptyTables(),
-    organizations: [{ id: orgId, name: 'Camisería Ejemplo del Bajío (DEMO)' }],
+    organizations: [{ id: orgId, name: 'Camisería Ejemplo del Bajío' }],
     suppliers: [{ id: 'SUP-0001', orgId, name: SUPPLIER_NAME, country: 'CN', kybStatus: 'demo_verificado', demo: true }],
     policies: POLICIES(orgId),
   };

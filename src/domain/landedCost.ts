@@ -45,14 +45,14 @@ export const computeLandedCost = (
       label: 'Valor de la mercancía',
       amountMxn: cents(goods),
       basis: `${input.goodsValueUsd} USD × ${input.fxRate} MXN/USD`,
-      source: 'Factura comercial · tipo de cambio DEMO',
+      source: 'Factura comercial · tipo de cambio de referencia',
     },
     {
       key: 'flete_seguro',
       label: 'Flete y seguro',
       amountMxn: cents(freight),
       basis: `(${input.freightUsd} + ${input.insuranceUsd}) USD × ${input.fxRate} MXN/USD`,
-      source: 'Cotización de flete DEMO',
+      source: 'Cotización de flete',
     },
     {
       key: 'igi',

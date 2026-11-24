@@ -142,7 +142,6 @@
   .stamp-sim {
     color: var(--color-sim);
     background-color: var(--color-sim-soft);
-    background-image: var(--pattern-sim);
     border-style: dashed;
   }
   .stamp-authorized-sim {
@@ -155,7 +154,6 @@
   .sim-surface {
     border: var(--rule-width) dashed var(--color-sim);
     background-color: var(--color-paper-2);
-    background-image: var(--pattern-sim);
     border-radius: var(--radius);
   }
   .decision-surface {
@@ -180,23 +178,72 @@
     }
   }
 
-  /* ── DEMO band (always visible, US-12) ────────────── */
+  /* ── Demo strip (always visible, US-12): slim and quiet, never absent ── */
   .demo-band {
     position: static;
     z-index: 30;
-    background-color: var(--color-sim-soft);
-    background-image: var(--pattern-sim);
-    border-bottom: var(--rule-width) dashed var(--color-sim);
-    color: var(--color-sim);
+    background: var(--color-paper-3);
+    border-bottom: var(--rule-width) solid var(--color-rule);
+    color: var(--color-ink-2);
   }
   .demo-mark {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
     font-family: var(--font-mono);
+    font-size: var(--text-xs);
     font-weight: 500;
-    letter-spacing: 0.16em;
-    color: var(--color-on-ink);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-sim);
+  }
+  .demo-mark::before {
+    content: '';
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 9999px;
     background: var(--color-sim);
-    padding: 2px var(--space-2);
+  }
+  /* Small inline marker next to every simulated figure (principle 4). */
+  .demo-note {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-sim);
+    border-bottom: var(--rule-width) dashed var(--color-sim);
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  .btn-mini {
+    min-height: 2rem;
+    padding: 0 var(--space-3);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-strong);
+    color: var(--color-ink-2);
+    background: transparent;
+    border: var(--rule-width) solid var(--color-control-border);
     border-radius: var(--radius);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-mini:hover {
+    background: var(--color-paper-2);
+    color: var(--color-ink);
+  }
+  .seg.seg-quiet {
+    border-color: var(--color-control-border);
+  }
+  .seg.seg-quiet button {
+    color: var(--color-ink-2);
+    border-right-color: var(--color-control-border);
+    border-right-style: solid;
+  }
+  .seg.seg-quiet button[aria-pressed='true'] {
+    background: var(--color-ink);
+    color: var(--color-on-ink);
   }
 
   /* ── controls ─────────────────────────────────────── */
@@ -314,9 +361,7 @@
   .seg button[aria-pressed='true']:focus-visible {
     outline-color: var(--color-on-ink);
   }
-  .demo-band .label {
-    color: var(--color-ink-2);
-  }
+
 
   /* ── navigation ───────────────────────────────────── */
   .tabs {

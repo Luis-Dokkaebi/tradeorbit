@@ -30,7 +30,7 @@ export function Caratula({ shipment }: { shipment: Shipment }) {
           </div>
         </div>
         <dl className="grid grid-cols-2 gap-x-6 gap-y-4 lg:grid-cols-3">
-          <Field label={t('file.supplier')}>{supplier.name}<span className="mono text-xs text-ink-3"> · {supplier.country} · KYB DEMO</span></Field>
+          <Field label={t('file.supplier')}>{supplier.name}<span className="mono text-xs text-ink-3"> · {supplier.country}</span></Field>
           <Field label={t('file.goods')}>{shipment.goods}</Field>
           <Field label={t('file.quantity')}><span className="figure">{shipment.quantity}</span> <span className="note">{shipment.unit}</span></Field>
           <Field label={t('file.amount')}><Amount value={shipment.amount} currency={shipment.currency} /></Field>

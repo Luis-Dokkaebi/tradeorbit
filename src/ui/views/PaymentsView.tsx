@@ -3,7 +3,7 @@ import { DEMO_ROUTES } from '../../domain/paymentRoutes';
 import { useT, type MessageKey } from '../../i18n';
 import { DEMO_FX_RATE } from '../../server/seed/scenarios';
 import type { PaymentProposal } from '../../shared/schemas';
-import { Amount, DemoTag, ErrorNote, PageHead, Stamp } from '../components/primitives';
+import { Amount, ErrorNote, PageHead, Stamp } from '../components/primitives';
 import { useAction, useServer } from '../serverContext';
 import { useShipment } from '../useShipment';
 import { NeedsFile } from './NeedsFile';
@@ -19,7 +19,7 @@ export function ProposalCard({ p, children }: { p: PaymentProposal; children?: R
           <span className="label">{p.id} · {p.corridor} · v{p.version}</span>
           <h2 className="text-lg">{p.routeLabel}</h2>
         </div>
-        <div className="flex flex-wrap gap-2"><Stamp tone={tone} enter>{t(`proposal.${p.status}` as MessageKey)}</Stamp><DemoTag /></div>
+        <div className="flex flex-wrap gap-2"><Stamp tone={tone} enter>{t(`proposal.${p.status}` as MessageKey)}</Stamp></div>
       </header>
       <dl className="grid grid-cols-2 gap-3">
         <div className="field"><dt className="label">{t('pay.gross')}</dt><dd><Amount value={p.grossUsd} currency="USD" /></dd></div>
@@ -60,7 +60,7 @@ export function PaymentsView() {
 
   return (
     <div className="grid gap-5">
-      <PageHead title={t('pay.title')} lede={t('pay.lede')} aside={<DemoTag>FX DEMO {DEMO_FX_RATE}</DemoTag>} />
+      <PageHead title={t('pay.title')} lede={t('pay.lede')} aside={<span className="label">{t('pay.rate')} {DEMO_FX_RATE}</span>} />
       <form className="sheet sheet-body flex flex-wrap items-end gap-3" onSubmit={submit}>
         <label className="field"><span className="label">{t('pay.amount')}</span><input className="input" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} data-testid="pay-amount" /></label>
         <button type="submit" className="btn" data-testid="pay-generate">{t('pay.generate')}</button>

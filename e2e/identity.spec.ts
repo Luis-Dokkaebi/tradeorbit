@@ -2,15 +2,19 @@ import { expect, test } from '@playwright/test';
 
 const ROUTES = ['expediente', 'costo', 'pagos', 'aprobaciones', 'conciliacion', 'aduana', 'preguntar', 'gobernanza'];
 
-/** US-12.c and D-03: the DEMO label is on every screen; screenshots for human identity review. */
-for (const [i, route] of ROUTES.entries()) {
-  const scenario = (['limpio', 'retraso', 'discrepancia'] as const)[i % 3];
-  test(`etiqueta DEMO visible en #/${route} (${scenario})`, async ({ page }, info) => {
-    await page.goto('/');
-    await page.getByTestId(`scenario-${scenario}`).click();
+/** Public view: no presenter controls and no DEMO label on any screen; screenshots for human review (D-03). */
+for (const route of ROUTES) {
+  test(`vista pública sin controles de presentador ni etiqueta DEMO en #/${route}`, async ({ page }, info) => {
     await page.goto(`/#/${route}`);
-    await expect(page.getByTestId('demo-mark')).toBeVisible();
-    await expect(page.getByTestId('demo-mark')).toBeInViewport();
+    await expect(page.getByRole('navigation')).toBeVisible();
+    await expect(page.getByTestId('demo-band')).toHaveCount(0);
+    await expect(page.locator('body')).not.toContainText('DEMO');
     await page.screenshot({ path: info.outputPath(`${route}.png`), fullPage: true });
   });
 }
+
+test('el modo presentador muestra los controles', async ({ page }) => {
+  await page.goto('/?presentador');
+  await expect(page.getByTestId('demo-mark')).toHaveText('Modo presentador');
+  await expect(page.getByTestId('scenario-limpio')).toBeVisible();
+});

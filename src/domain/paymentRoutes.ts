@@ -1,7 +1,7 @@
 import { cents, dec, sum } from '../shared/money';
 import type { FeeLine, PaymentRouteKey } from '../shared/schemas';
 
-/** DEMO route definitions. Every rate here is illustrative and labelled DEMO in the UI (principle 4). */
+/** Illustrative route definitions: every rate here is an assumption, not a quote from a provider. */
 export interface RouteDefinition {
   key: PaymentRouteKey;
   label: string;
@@ -16,7 +16,7 @@ export const DEMO_ROUTES: readonly RouteDefinition[] = [
     key: 'banco',
     label: 'Transferencia bancaria internacional (SWIFT)',
     receiveCurrency: 'USD',
-    eta: '2 a 4 días hábiles (DEMO)',
+    eta: '2 a 4 días hábiles (estimado)',
     fees: [
       { label: 'Diferencial cambiario del banco', kind: 'percent', value: '0.015' },
       { label: 'Comisión de envío SWIFT', kind: 'fixed', value: '35.00' },
@@ -28,7 +28,7 @@ export const DEMO_ROUTES: readonly RouteDefinition[] = [
     key: 'riel_stablecoin',
     label: 'Riel con stablecoin intermedio (USDC)',
     receiveCurrency: 'USDC',
-    eta: 'Mismo día hábil (DEMO)',
+    eta: 'Mismo día hábil (estimado)',
     fees: [
       { label: 'Conversión MXN a USDC (entrada)', kind: 'percent', value: '0.006' },
       { label: 'Comisión de red', kind: 'fixed', value: '1.00' },

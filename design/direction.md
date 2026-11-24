@@ -24,7 +24,7 @@ La app se lee como la carpeta de una operación de comercio exterior: un folder 
    - `--color-sim` (azul carbón) es exclusivo de lo simulado: etiqueta DEMO, estado "propuesta", "autorizada (simulada)", datos DEMO y modo reproducción.
    - Verde (`--color-ok`) y ocre (`--color-wait`) solo para estado: conciliado / pendiente o retraso.
    - Sin degradados. El rayado de lo simulado es un patrón SVG, no un degradado.
-2. **Lenguaje propio de lo simulado (principios 1 y 4).** Todo lo simulado lleva tres señales a la vez: borde discontinuo, rayado diagonal tenue de copia al carbón y una etiqueta monoespaciada en azul carbón. "Propuesta" = borde discontinuo; "autorizada (simulada)" = sello rectangular azul carbón con rayado; nunca el verde de un estado real.
+2. **Lenguaje de lo simulado (principio 1).** Por decisión del dueño (`specs/proposals/2026-11-24-ocultar-demo.md`), la vista pública no muestra etiquetas DEMO. Se conserva la identidad visual de los estados que describen el producto: "Propuesta" con borde discontinuo azul carbón y "Autorizada (simulada)" con sello azul carbón rayado, nunca el verde de un estado real. Los controles del presentador solo aparecen con `?presentador`.
 3. **La pantalla central es el expediente.** Encabezado tipo carátula (folio, proveedor, mercancía, fracción, estado) y debajo una **hoja de ruta** de ocho etapas con su sello de estado. No hay rejilla de tarjetas iguales.
 4. **Cifras en monoespaciada, alineadas a la derecha**, con la moneda como sufijo pequeño. Cada cifra lleva su cita de origen (documento, página, recuadro o tabla).
 5. **Filetes, no sombras.** Superficies definidas por filetes de 1 px; radio de 3 px (papel cortado, no píldora).
@@ -54,7 +54,7 @@ Mínimo. Sin rebotes ni parallax. El único gesto es el "sellado": al registrar 
 
 ## Prueba de identidad
 
-Sin logo, una pantalla debe reconocerse por: la banda DEMO azul carbón rayada, la hoja de ruta con sellos, las etiquetas monoespaciadas sobre cada dato y el bermellón que solo aparece donde alguien tiene que decidir.
+Sin logo, una pantalla debe reconocerse por: la hoja de ruta con sellos, las etiquetas monoespaciadas sobre cada dato y el bermellón que solo aparece donde alguien tiene que decidir.
 
 ## Prohibido
 

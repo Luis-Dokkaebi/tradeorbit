@@ -231,7 +231,7 @@
       "priority": "P1",
       "criterion": "Etiqueta DEMO global visible en todas las pantallas.",
       "verification": "e2e/identity.spec.ts",
-      "passes": true
+      "passes": false
     },
     {
       "id": "US-12.d",
