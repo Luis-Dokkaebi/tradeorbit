@@ -2,8 +2,8 @@
   "app.name": "Kiilonova Trade",
   "app.tagline": "智能进口档案",
   "app.principle": "代理提出建议，由人授权，不转移任何资金。",
-  "demo.mark": "演示",
-  "demo.notice": "演示模式：合成数据，汇率与路线仅作示例。",
+  "demo.mark": "演示环境",
+  "demo.notice": "合成数据与示意金额 · 不转移任何资金",
   "demo.scenario": "场景",
   "demo.reset": "重置",
   "demo.replay": "回放",
@@ -210,5 +210,7 @@
   "gov.illustrative": "演示 · 示意数据，未测量",
   "gov.planted": "预置差异",
   "gov.measuredNow": "刚在合成种子集上测得",
-  "approvals.riskNote": "存在未解决的高严重度差异：授权时必须写明接受风险的理由。"
+  "approvals.riskNote": "存在未解决的高严重度差异：授权时必须写明接受风险的理由。",
+  "demo.tag": "演示",
+  "demo.controls": "演讲者控制"
 }

@@ -24,7 +24,7 @@ describe('App shell', () => {
 
   it('always shows the DEMO band', () => {
     renderApp();
-    expect(within(screen.getByTestId('demo-band')).getByTestId('demo-mark')).toHaveTextContent('DEMO');
+    expect(within(screen.getByTestId('demo-band')).getByTestId('demo-mark')).toHaveTextContent('Entorno de demostración');
   });
 
   it('opens the file from the purchase order and flags the low-confidence ETA', async () => {

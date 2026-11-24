@@ -48,7 +48,7 @@ export function DocumentsPanel({ shipment }: { shipment: Shipment }) {
         <ErrorNote message={error} />
         {tray.length > 0 ? (
           <div className="sim-surface grid gap-2 p-3" data-testid="seed-tray">
-            <span className="label">{t('docs.tray')} · DEMO</span>
+            <span className="label">{t('docs.tray')} <span className="demo-note">DEMO</span></span>
             <ul className="grid gap-2 md:grid-cols-2">
               {tray.map((d) => (
                 <li key={d.id} className="flex items-center justify-between gap-3 border-b border-dashed border-sim pb-2">

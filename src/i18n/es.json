@@ -2,8 +2,8 @@
   "app.name": "Kiilonova Trade",
   "app.tagline": "Expediente inteligente de importación",
   "app.principle": "Los agentes proponen. Una persona autoriza. No se mueve dinero.",
-  "demo.mark": "DEMO",
-  "demo.notice": "Modo demostración: datos sintéticos, tipo de cambio y rutas ilustrativas.",
+  "demo.mark": "Entorno de demostración",
+  "demo.notice": "Datos sintéticos e importes ilustrativos · no se mueve dinero",
   "demo.scenario": "Escenario",
   "demo.reset": "Reiniciar",
   "demo.replay": "Reproducción",
@@ -210,5 +210,7 @@
   "gov.illustrative": "DEMO · ilustrativo, no medido",
   "gov.planted": "plantadas",
   "gov.measuredNow": "medido ahora sobre el set semilla sintético",
-  "approvals.riskNote": "Hay discrepancias de severidad alta abiertas: autorizar exige escribir el motivo por el que aceptas el riesgo."
+  "approvals.riskNote": "Hay discrepancias de severidad alta abiertas: autorizar exige escribir el motivo por el que aceptas el riesgo.",
+  "demo.tag": "DEMO",
+  "demo.controls": "Controles del presentador"
 }

@@ -37,7 +37,7 @@ export function ApprovalsView() {
             <h2 className="label">{t('approvals.evidence')}</h2>
             <ul className="grid gap-2 text-sm">
               <li><Citation>{rec.id}</Citation> {t('rec.balance')}: <span className="figure">{formatAmount(rec.balance)} USD</span> · {t(`rec.${rec.status}`)}</li>
-              {quote ? <li><Citation>{quote.id}</Citation> {t('cost.total')}: <span className="figure">{formatAmount(quote.totalMxn)} MXN</span> <span className="stamp stamp-sim">DEMO</span> {quote.rule.verification === 'por_verificar' ? <span className="stamp stamp-wait">{t('cost.unverified')}</span> : null}</li> : <li className="note">{t('cost.title')}: {t('state.pending')}</li>}
+              {quote ? <li><Citation>{quote.id}</Citation> {t('cost.total')}: <span className="figure">{formatAmount(quote.totalMxn)} MXN</span> <span className="demo-note">DEMO</span> {quote.rule.verification === 'por_verificar' ? <span className="stamp stamp-wait">{t('cost.unverified')}</span> : null}</li> : <li className="note">{t('cost.title')}: {t('state.pending')}</li>}
               {openDisc.length > 0 ? <li><Stamp tone="decision">{openDisc.length} {t('disc.title').toLowerCase()}</Stamp></li> : null}
             </ul>
             {openDisc.some((d) => d.severity === 'alta') ? <p className="note text-decision" data-testid={`risk-${p.route}`}>{t('approvals.riskNote')}</p> : null}

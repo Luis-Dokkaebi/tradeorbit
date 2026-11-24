@@ -2,8 +2,8 @@
   "app.name": "Kiilonova Trade",
   "app.tagline": "Smart import file",
   "app.principle": "Agents propose. A person authorizes. No money moves.",
-  "demo.mark": "DEMO",
-  "demo.notice": "Demo mode: synthetic data, illustrative exchange rate and routes.",
+  "demo.mark": "Demo environment",
+  "demo.notice": "Synthetic data and illustrative amounts · no money moves",
   "demo.scenario": "Scenario",
   "demo.reset": "Reset",
   "demo.replay": "Replay",
@@ -210,5 +210,7 @@
   "gov.illustrative": "DEMO · illustrative, not measured",
   "gov.planted": "planted",
   "gov.measuredNow": "measured now on the synthetic seed set",
-  "approvals.riskNote": "There are open high-severity discrepancies: authorizing requires a reason for accepting the risk."
+  "approvals.riskNote": "There are open high-severity discrepancies: authorizing requires a reason for accepting the risk.",
+  "demo.tag": "DEMO",
+  "demo.controls": "Presenter controls"
 }

@@ -35,7 +35,7 @@ export function TimelinePanel({ shipment }: { shipment: Shipment }) {
               <span>{s.label}</span>
               <span className="flex flex-wrap items-center justify-end gap-2">
                 {s.date ? <span className="mono text-sm">{formatDateEs(s.date)}</span> : null}
-                {s.origin === 'demo' ? <span className="stamp stamp-sim">DEMO</span> : null}
+                {s.origin === 'demo' ? <span className="demo-note">DEMO</span> : null}
                 <Stamp tone={TONE[s.state] ?? 'neutral'}>{stateLabel(s.state)}</Stamp>
               </span>
             </li>

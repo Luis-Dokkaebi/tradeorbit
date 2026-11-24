@@ -42,7 +42,7 @@ export function App() {
   const closeNotes = useCallback(() => setNotesOpen(false), []);
 
   useEffect(() => {
-    document.title = `${t(TITLES[route])} · Kiilonova Trade · DEMO`;
+    document.title = `${t(TITLES[route])} · Kiilonova Trade`;
     if (firstRender.current) {
       firstRender.current = false;
       return;
@@ -61,7 +61,7 @@ export function App() {
         </ErrorBoundary>
       </main>
       <footer className="mx-auto w-full max-w-shell border-t border-rule px-4 py-4">
-        <p className="mono text-xs text-ink-3">Kiilonova Trade MVP · DEMO · Datos sintéticos · Ninguna función mueve dinero, firma o presenta ante una autoridad.</p>
+        <p className="mono text-xs text-ink-3">Kiilonova Trade · Entorno de demostración · Datos sintéticos · Ninguna función mueve dinero, firma o presenta ante una autoridad.</p>
       </footer>
       {notesOpen ? <PresenterNotes onClose={closeNotes} /> : null}
     </>
