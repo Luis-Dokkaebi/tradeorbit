@@ -36,3 +36,9 @@ Bitácora de sesiones para la siguiente sesión. La más reciente arriba.
 - T-040: tres ensayos completos de 8 minutos y video de respaldo (requiere persona).
 - T-042: correcciones en la página de Lovable (fuera de este repositorio).
 - Preguntas abiertas del SDD siguen abiertas: mercancía semilla definitiva, aprobador de referencia, documentos reales anonimizados.
+
+### 2026-11-26 · Logo de la marca
+
+- Logo del dueño vectorizado a SVG (`src/ui/components/BrandMark.tsx`, `public/logo.svg`); diferencia con la imagen original < 1 % de píxeles.
+- Masthead muestra la marca junto a "KIILONOVA TRADE" (color `--color-ink` vía `currentColor`); favicon `/logo.svg` (claro/oscuro), permitido por la CSP (`img-src 'self'`).
+- Verde: `npm run check`, `npm test` (95), `npm run build`, `npm run e2e` (17). Sin cambios en `feature_list.json`.

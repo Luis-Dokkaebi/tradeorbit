@@ -1,6 +1,7 @@
 import { useT, type MessageKey } from '../../i18n';
 import { useServer } from '../serverContext';
 import { href, type Route } from '../useHashRoute';
+import { BrandMark } from './BrandMark';
 
 const NAV: readonly { route: Route; key: MessageKey }[] = [
   { route: 'expediente', key: 'nav.file' },
@@ -21,9 +22,12 @@ export function Masthead({ route }: { route: Route }) {
   return (
     <header className="mx-auto w-full max-w-shell px-4 pt-5">
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 pb-4">
-        <a href={href('expediente')} className="grid gap-1 no-underline">
-          <span className="wordmark">KIILONOVA&nbsp;TRADE</span>
-          <span className="label">{t('app.tagline')} · MX ← CN</span>
+        <a href={href('expediente')} className="flex items-center gap-3 no-underline">
+          <BrandMark className="brand-mark" />
+          <span className="grid gap-1">
+            <span className="wordmark">KIILONOVA&nbsp;TRADE</span>
+            <span className="label">{t('app.tagline')} · MX ← CN</span>
+          </span>
         </a>
         <p className="note mono text-xs">{t('app.principle')}</p>
       </div>

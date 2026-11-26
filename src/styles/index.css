@@ -541,6 +541,14 @@
     letter-spacing: 0.02em;
     color: var(--color-ink);
   }
+
+  .brand-mark {
+    flex: none;
+    width: auto;
+    height: 2.75rem;
+    aspect-ratio: 576 / 776;
+    color: var(--color-ink);
+  }
 }
 
 @layer components {
